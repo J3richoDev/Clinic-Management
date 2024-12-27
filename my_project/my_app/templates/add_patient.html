@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Patient</title>
+</head>
+<body>
+    <h1>Add New Patient</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Patient</button>
+    </form>
+    
+    {% if request.user.role == 'Nurse' %}
+        <a href="{% url 'nurse_dashboard' %}">Back to Nurse Dashboard</a>
+    {% elif request.user.role == 'Dentist' %}
+        <a href="{% url 'dentist_dashboard' %}">Back to Dentist Dashboard</a>
+    {% elif request.user.role == 'Physician' %}
+        <a href="{% url 'physician_dashboard' %}">Back to Physician Dashboard</a>
+    {% else %}
+        <a href="{% url 'home' %}">Back to Home</a>
+    {% endif %}
+    
+</body>
+</html>

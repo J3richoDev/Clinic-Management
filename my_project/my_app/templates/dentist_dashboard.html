@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentist Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, Dentist{{ user.full_name }}</h1>
+    <p>Here is your queue:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Queue Number</th>
+                <th>Transaction Type</th>
+                <th>Patient Role</th>
+                <th>Special Tag</th>
+                <th>Transaction Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td>{{ ticket.queue_number }}</td>
+                <td>{{ ticket.get_transaction_type_display }}</td>
+                <td>{{ ticket.get_role_display }}</td>
+                <td>{{ ticket.get_special_tag_display }}</td>
+                <td>{{ ticket.transaction_time_local|date:"Y-m-d H:i:s" }}</td>
+                <td>
+                    {% if ticket.label == "Being Served" %}
+                        <span style="font-weight: bold; color: green;">Being Served</span>
+                    {% elif ticket.label == "Next" %}
+                        <span style="font-weight: bold; color: orange;">Next</span>
+                    {% else %}
+                        <span style="color: gray;">In Queue</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No tickets in the queue</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Add a Proceed button below the table -->
+    {% if tickets %}
+    <!-- Form action references the first ticket in the queue -->
+    <form action="{% url 'kiosk:proceed_next_patient' tickets.0.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Proceed</button>
+    </form>
+{% else %}
+    <p>No patients in the queue.</p>
+{% endif %}
+
+    <a href="{% url 'add_patient' %}">Add Patient</a>
+
+    
+</body>
+</html>

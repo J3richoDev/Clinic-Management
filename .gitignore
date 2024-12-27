@@ -1,0 +1,6 @@
+project_management/db.sqlite3
+*.pyc
+*.sqlite3
+/project_management/media/profile_pictures
+/project_management/media/task_files
+project_management/debug.log

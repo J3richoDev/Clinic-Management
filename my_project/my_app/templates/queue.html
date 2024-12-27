@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue System</title>
+    <style>
+        nav {
+            background-color: #f8f9fa;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status {
+            font-weight: bold;
+        }
+        .status.serving {
+            color: green;
+        }
+        .status.next {
+            color: orange;
+        }
+        .status.queue {
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <div>
+            <a href="{% url 'nurse_dashboard' %}">Home</a>
+            <a href="{% url 'queue' %}">Queuing</a>
+            <a href="{% url 'patient_list' %}" style="margin-right: 20px; text-decoration: none; color: #007bff;">Patients</a>
+            <a href="{% url 'view_profile' %}" style="text-decoration: none; color: #007bff;">Profile</a>
+        </div>
+        <div>
+            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;">
+            <a href="{% url 'view_profile' %}">{{ user.full_name }}</a>
+        </div>
+    </nav>
+
+    <!-- Queue Section -->
+    <h2>Queue for Walk-In Patients</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Queue Number</th>
+                <th>Transaction Type</th>
+                <th>Patient Role</th>
+                <th>Special Tag</th>
+                <th>Transaction Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            {% if ticket.assigned_to == user %}
+            <tr>
+                <td>{{ ticket.queue_number }}</td>
+                <td>
+                    <span title="{{ ticket.details }}">{{ ticket.truncated_details }}</span>
+                </td>
+                <td>{{ ticket.get_role_display }}</td>
+                <td>{{ ticket.get_special_tag_display }}</td>
+                <td>{{ ticket.transaction_time_local|date:"Y-m-d H:i:s" }}</td>
+                <td>
+                    {% if ticket.label == "Being Served" %}
+                        <span class="status serving">Being Served</span>
+                    {% elif ticket.label == "Next" %}
+                        <span class="status next">Next</span>
+                    {% else %}
+                        <span class="status queue">In Queue</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr>
+                <td colspan="6">No tickets in the queue</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

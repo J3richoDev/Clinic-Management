@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Ticket</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="vh-100 d-flex align-items-center justify-content-center bg-light">
+
+    <!-- Centered Container -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow-sm p-4">
+                    <h2 class="text-center mb-4">Create Your Ticket</h2>
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <!-- Transaction Type -->
+                        <div class="mb-3">
+                            <label for="id_transaction_type" class="form-label">Transaction type:</label>
+                            {{ form.transaction_type }}
+                        </div>
+
+                        <!-- Role -->
+                        <div class="mb-3">
+                            <label for="id_role" class="form-label">Role:</label>
+                            {{ form.role }}
+                        </div>
+
+                        <!-- Special Tag -->
+                        <div class="mb-3">
+                            <label for="id_special_tag" class="form-label">Special tag:</label>
+                            {{ form.special_tag }}
+                        </div>
+
+                        <!-- Scheduled Time -->
+                        <div class="mb-3">
+                            <label for="id_scheduled_time" class="form-label">Scheduled time:</label>
+                            {{ form.scheduled_time }}
+                        </div>
+
+                        <!-- Certificate Type -->
+                        <div id="certificate-row" class="mb-3" style="display: none;">
+                            <label for="id_certificate_type" class="form-label">Certificate Type:</label>
+                            {{ form.certificate_type }}
+                        </div>
+
+                        <!-- Details -->
+                        <div id="details-row" class="mb-3" style="display: none;">
+                            <label for="id_details" class="form-label">Details:</label>
+                            {{ form.details }}
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary w-100">Generate Ticket</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const transactionType = document.getElementById('id_transaction_type');
+            const certificateType = document.getElementById('id_certificate_type');
+            const certificateRow = certificateType.closest('div');
+            const detailsField = document.getElementById('id_details');
+            const detailsRow = detailsField.closest('div');
+
+            certificateRow.style.display = 'none';
+            detailsRow.style.display = 'none';
+
+            transactionType.addEventListener('change', function () {
+                const selectedValue = transactionType.value;
+
+                if (selectedValue === 'CERTIFICATE') {
+                    certificateRow.style.display = 'block';
+                    detailsRow.style.display = 'none';
+                    detailsField.value = '';
+                } else if (selectedValue === 'OTHER') {
+                    certificateRow.style.display = 'none';
+                    detailsRow.style.display = 'block';
+                    certificateType.value = '';
+                } else {
+                    certificateRow.style.display = 'none';
+                    detailsRow.style.display = 'none';
+                    detailsField.value = '';
+                    certificateType.value = '';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

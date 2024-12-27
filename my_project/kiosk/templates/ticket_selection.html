@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Selection</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="vh-100 d-flex align-items-center justify-content-center">
+    <!-- Centered Container -->
+    <div class="text-center">
+        <h1 class="mb-4">Welcome to the Kiosk</h1>
+        <p class="lead mb-4">Please select the type of ticket you want to create:</p>
+        
+        <!-- Buttons -->
+        <div class="d-flex justify-content-center gap-3">
+            <form action="{% url 'kiosk:ticket_creation' ticket_type='WALKIN' %}" method="get">
+                <button type="submit" class="btn btn-primary btn-lg">Walk-in</button>
+            </form>
+            <form action="{% url 'kiosk:ticket_creation' ticket_type='APPOINTMENT' %}" method="get">
+                <button type="submit" class="btn btn-success btn-lg">Appointment</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
