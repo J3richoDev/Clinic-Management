@@ -1,0 +1,118 @@
+{% extends 'guest.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <div class="grid md:grid-cols-2 grid-cols-1 min-h-screen bg-base-100 rounded-xl">
+      <div class="min-h-full">
+        <div class="hero min-h-full rounded-l-xl bg-sky-400">
+          <div class="hero-content py-12">
+            <div class="max-w-md bg-base-100 px-5 rounded-lg">
+              <div class="text-center mt-12">
+                <img src="{% static 'logo/logo.png' %}" alt="Omnia Pic" class="w-60 inline-block">
+              </div>
+              <div class="mb-10 text-center">
+                <h1 class="text-2xl mt-8 font-bold">
+                  Welcome to Bulsu Clinic!
+                </h1>
+                <p class="py-2 mt-4">
+                  Take control of your project with speed and precision.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 content-center">
+        <div class="flex flex-col justify-center mb-2">
+          <div class="w-6/12 mx-auto">
+            <h2 class="text-2xl text-center font-semibold">
+              Admin Login
+            </h2>
+          </div>
+        </div>
+        <div class="w-6/12 mx-auto">
+          <form method="POST">
+            {% csrf_token %}
+            <div class="mb-5">
+              <label class="font-medium">{{ form.username.label}}</label>
+                <label class="input input-bordered flex items-center gap-2" for="username">
+                  {{ form.username|add_class:"grow"|attr:"placeholder:Email or Username" }}
+                  </label>
+                  {% if form.username.errors %}
+                      <p class="text-sm text-red-500 mt-1">
+                          {{ form.username.errors|striptags }}
+                      </p>
+                  {% endif %}
+            </div>
+            <div class="mb-5">
+              <label class="font-medium">{{ form.password.label}}</label>
+              <label class="input input-bordered flex items-center gap-2" for="password">
+                  <div class="relative grow">
+                      <!-- Password input field with a specific id -->
+                      <input type="password" id="password" name="password" class="grow" placeholder="••••••••" />
+                      <!-- Toggle icon -->
+                      <i class="fa fa-eye-slash absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" onclick="toggleVisibility('password')"></i>
+                  </div>
+              </label>
+              {% if form.password.errors %}
+                  <p class="text-sm text-red-500 mt-1">{{ form.password.errors|striptags }}</p>
+              {% endif %}
+          </div>
+
+            {% if form.errors %}
+                <p class="text-sm text-red-500 mt-1">
+                    {{ form.non_field_errors|striptags }}
+                </p>
+            {% endif %}
+          <div class="text-right text-primary">
+            <a href="/users/forgot-password/">
+              <span class="text-sm inline-block hover:text-primary hover:underline hover:cursor-pointer transition duration-200">
+                Forgot Password?
+              </span>
+            </a>
+          </div>
+          <button type="submit" class="btn btn-primary mt-5 w-full text-white">
+            Login
+          </button>
+          <div class="text-center mt-6">
+            Don't have an account yet?
+            <a href="/users/register">
+              <span class=" inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">
+                Register
+              </span>
+            </a>
+          </div>
+          <div class="text-center mt-6">
+            <a href="/my_app/staff-login/">
+              <span class=" inline-block  hover:text-primary hover:underline hover:cursor-pointer transition duration-200">
+                Login as Staff/Patient
+              </span>
+            </a>
+          </div>
+        </form>
+        </div>
+      </div>
+    </div>
+
+    
+<script>
+  // Function to toggle the password visibility
+  function toggleVisibility(fieldId) {
+    const input = document.getElementById(fieldId);
+    const icon = input.nextElementSibling.querySelector('i');  // More specific targeting of the icon
+
+    if (input.type === "password") {
+      input.type = "text";  // Change type to 'text' to show the password
+      icon.classList.remove('fa-eye-slash');  // Change icon to eye
+      icon.classList.add('fa-eye');
+    } else {
+      input.type = "password";  // Change type to 'password' to hide the password
+      icon.classList.remove('fa-eye');  // Change icon to eye-slash
+      icon.classList.add('fa-eye-slash');
+    }
+  }
+</script>
+
+{% endblock %}

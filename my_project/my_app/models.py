@@ -155,7 +155,7 @@ class MedicalRecord(models.Model):
     
     @property
     def is_active_session(self):
-        active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        active_sessions = session.objects.filter(expire_date__gte=timezone.now())
         for session in active_sessions:
             data = session.get_decoded()
             if str(self.id) == str(data.get('_auth_user_id')):

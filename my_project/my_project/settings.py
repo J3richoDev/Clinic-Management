@@ -41,8 +41,14 @@ INSTALLED_APPS = [
     'my_app.apps.MyAppConfig',
     'django_extensions',
     'kiosk',
-    'rest_framework',  # Add this
+    'rest_framework', 
+    'crispy_forms',
+    "crispy_tailwind",
+    'widget_tweaks',
 ]
+
+LOGIN_REDIRECT_URL = 'my_app/staff-list/'
+LOGIN_URL = 'my_app/staff-login'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

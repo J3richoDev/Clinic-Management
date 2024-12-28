@@ -19,12 +19,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView  # Add this import
+from my_app.views import staff_login
 
 urlpatterns = [
     path('admin/', admin.site.urls),  # Django's built-in admin
     path('my_app/super-admin/', include('my_app.urls')),  # Your custom super admin
     path('my_app/', include('my_app.urls')),  # Include my_app URLs
     path('kiosk/', include('kiosk.urls')),  # New standalone kiosk app
+    path('', staff_login, name='staff_login'),
 ]
 
 if settings.DEBUG:

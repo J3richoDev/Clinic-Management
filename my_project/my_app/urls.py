@@ -5,10 +5,10 @@ from .views import DashboardStatsAPIView
 
 urlpatterns = [
 
-    path('', views.home, name='home'),
+    path('', views.staff_login, name='staff_login'),
 
     # Super Admin URLs
-    path('super-admin/login/', views.super_admin_login, name='super_admin_login'),
+    path('super-admin/login/', views.SuperAdminLoginView.as_view(), name='super_admin_login'),
     path('super-admin/logout/', views.super_admin_logout, name='super_admin_logout'),
     path('super-admin/dashboard/', views.super_admin_dashboard, name='super_admin_dashboard'),
     path('super-admin/show-temp-password/', views.show_temp_password, name='show_temp_password'),

@@ -27,10 +27,16 @@ from rest_framework.response import Response
 from django.db.models import Count, Avg
 from .models import Patient
 from django.db.models import Q
+from django.contrib.auth import update_session_auth_hash, logout, authenticate, login
+from django.contrib.auth.views import LoginView
+
 
 # Helper function to check if the user is a super admin
 def is_super_admin(user):
     return user.is_superuser
+
+class SuperAdminLoginView(LoginView):
+    template_name = 'admin/super_admin_login.html'
 
 # Super Admin Views
 def super_admin_login(request):
@@ -43,7 +49,7 @@ def super_admin_login(request):
             # Allow login for superusers and staff
             if user.is_superuser or user.is_staff:
                 login(request, user)
-                return redirect('super_admin_dashboard')
+                return redirect('staff_list')
             else:
                 messages.error(request, "Unauthorized access.")
                 return redirect('super_admin_login')
@@ -51,17 +57,17 @@ def super_admin_login(request):
             messages.error(request, "Invalid credentials.")
             return redirect('super_admin_login')
 
-    return render(request, 'super_admin_login.html')
+    return render(request, 'admin/super_admin_login.html')
 
 @user_passes_test(is_super_admin)
 def super_admin_logout(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
-    return redirect('super_admin_login')
+    return redirect('home')
 
 @user_passes_test(is_super_admin, login_url='super_admin_login')
 def super_admin_dashboard(request):
-    return render(request, 'super_admin_dashboard.html', {'user': request.user})
+    return render(request, 'admin/super_admin_dashboard.html', {'user': request.user})
 
 @csrf_exempt
 @user_passes_test(is_super_admin, login_url='super_admin_login')
@@ -77,7 +83,7 @@ def staff_list(request):
     else:
         staff_members = CustomUser.objects.filter(is_superuser=False)  # Exclude superuser accounts
 
-    return render(request, 'staff_list.html', {'staff_members': staff_members, 'search_query': query})
+    return render(request, 'admin/staff_list.html', {'staff_members': staff_members, 'search_query': query})
 
 @user_passes_test(is_super_admin)
 def add_staff(request):
@@ -127,7 +133,7 @@ def add_staff(request):
             messages.error(request, f"An error occurred while creating the staff: {e}")
             return redirect('staff_list')
 
-    return render(request, 'add_staff.html')
+    return render(request, 'admin/add_staff.html')
 
 def show_temp_password(request):
     """
@@ -142,7 +148,7 @@ def show_temp_password(request):
     # Clear the session data after displaying
     del request.session['temp_password_for_user']
     
-    return render(request, 'show_temp_password.html', {
+    return render(request, 'admin/show_temp_password.html', {
         'username': temp_password_data['username'],
         'temp_password': temp_password_data['password']
     })
@@ -190,7 +196,7 @@ def staff_login(request):
             messages.error(request, "Invalid credentials or unauthorized access.")
             return redirect('staff_login')
 
-    return render(request, 'staff_login.html')
+    return render(request, 'staff/staff_login.html')
 
 @login_required
 def nurse_dashboard(request):
@@ -254,7 +260,7 @@ def nurse_dashboard(request):
             patients = patients.filter(role=role_filter)
 
     # Render the template with context
-    return render(request, 'nurse_dashboard.html', {
+    return render(request, 'staff/nurse_dashboard.html', {
         'tickets': tickets,
         'patients': patients,
     })
@@ -308,7 +314,7 @@ def dentist_dashboard(request):
     if role_filter:
         patients = patients.filter(role=role_filter)
 
-    return render(request, 'dentist_dashboard.html', {
+    return render(request, 'staff/dentist_dashboard.html', {
         'tickets': tickets,
         'patients': patients,
     })
@@ -360,7 +366,7 @@ def physician_dashboard(request):
     if role_filter:
         patients = patients.filter(role=role_filter)
             
-    return render(request, 'physician_dashboard.html', {
+    return render(request, 'staff/physician_dashboard.html', {
         'tickets': tickets,
         'patients': patients,
     })
@@ -390,7 +396,7 @@ def patient_dashboard(request):
 
 @login_required
 def view_profile(request):
-    return render(request, 'view_profile.html', {'user': request.user})
+    return render(request, 'accounts/view_profile.html', {'user': request.user})
 
 @login_required
 def edit_own_profile(request):
@@ -405,7 +411,7 @@ def edit_own_profile(request):
     else:
         form = ProfileForm(instance=request.user)
 
-    return render(request, 'edit_profile.html', {'form': form})
+    return render(request, 'accounts/edit_profile.html', {'form': form})
 
 @login_required
 def change_password(request):
@@ -421,7 +427,7 @@ def change_password(request):
     else:
         form = CustomPasswordChangeForm(user=request.user)
 
-    return render(request, 'change_password.html', {'form': form})
+    return render(request, 'accounts/change_password.html', {'form': form})
 
 @login_required
 def delete_account(request):
@@ -429,7 +435,7 @@ def delete_account(request):
         request.user.delete()
         messages.success(request, "Your account has been deleted.")
         return redirect('staff_login')
-    return render(request, 'delete_account.html')
+    return render(request, 'accounts/delete_account.html')
 
 def home(request):
     """Render the home page."""
@@ -462,7 +468,7 @@ def patient_list(request):
     else:
         patients = Patient.objects.all()
 
-    return render(request, 'patient_list.html', {'patients': patients})
+    return render(request, 'staff/patient_list.html', {'patients': patients})
 
 def add_medical_record(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id)
@@ -477,7 +483,7 @@ def add_medical_record(request, patient_id):
     else:
         form = MedicalRecordForm()
 
-    return render(request, 'add_medical_record.html', {'form': form, 'patient': patient})
+    return render(request, 'staff/add_medical_record.html', {'form': form, 'patient': patient})
 
 def patient_detail(request, patient_id):
     # Retrieve the patient by their ID or return a 404 if not found
@@ -486,7 +492,7 @@ def patient_detail(request, patient_id):
     # Get all medical records associated with the patient
     medical_records = MedicalRecord.objects.filter(patient=patient).order_by('-date_time')
 
-    return render(request, 'patient_detail.html', {
+    return render(request, 'staff/patient_detail.html', {
         'patient': patient,
         'medical_records': medical_records
     })
@@ -511,7 +517,7 @@ def add_patient(request):
     else:
         form = PatientForm()
 
-    return render(request, 'add_patient.html', {'form': form})
+    return render(request, 'staff/add_patient.html', {'form': form})
 
 @login_required
 def queue_view(request):
@@ -548,34 +554,34 @@ def queue_view(request):
         else:
             ticket.truncated_details = ticket.get_transaction_type_display()
 
-    return render(request, 'queue.html', {'tickets': tickets})
+    return render(request, 'staff/queue.html', {'tickets': tickets})
 
 @login_required
 def nurse_home(request):
     if request.user.role != 'nurse':
         return HttpResponseForbidden("Unauthorized Access")
     
-    dashboard_data = get_dashboard_metrics()
+    dashboard_data = ''
     context = {
         'total_patients': dashboard_data['total_patients'],
         'transaction_summary': dashboard_data['transaction_summary'],
     }
 
-    return render_staff_home(request, 'nurse_home.html', 'NURSE')
+    return render_staff_home(request, 'staff/nurse_home.html', 'NURSE')
 
 @login_required
 def dentist_home(request):
     if request.user.role != 'dentist':
         return HttpResponseForbidden("Unauthorized Access")
 
-    return render_staff_home(request, 'dentist_home.html', 'DENTIST')
+    return render_staff_home(request, 'staff/dentist_home.html', 'DENTIST')
 
 @login_required
 def physician_home(request):
     if request.user.role != 'physician':
         return HttpResponseForbidden("Unauthorized Access")
 
-    return render_staff_home(request, 'physician_home.html', 'PHYSICIAN')
+    return render_staff_home(request, 'staff/physician_home.html', 'PHYSICIAN')
 
 # Reusable helper function for dashboard logic
 def render_staff_home(request, template_name, transaction_group):

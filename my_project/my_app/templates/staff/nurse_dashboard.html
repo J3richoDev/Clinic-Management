@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks%}
+
+{% block title %}Manage Staff{% endblock %}
+{% block heading %}Queue for Walk-In Patients{% endblock %}
+
+{% block content %}
+
+{% if not request.user.is_superuser %}
+
+
+<div class="header">
+    <div class="header-content">
+        <form method="get" action="{% url 'staff_list' %}" class="search-form">
+            <input type="text" name="search" class="form-control" placeholder="Search staff by name, email, or role" value="{{ search_query }}">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+    </div>
+</div>
+
+
+<div class="card w-full p-6 bg-base-100 shadow-xl mt-2 max-h-[600px] overflow-y-auto min-h-[300px]">
+
+    <h2>Queue table</h2>
+
+    {% if staff_members %}
+    <div class="relative overflow-x-auto rounded-lg">
+      <table class="table w-full whitespace-no-wrap table-pin-rows table-pin-cols">
+        <thead>
+            <tr>
+                <th>Queue Number</th>
+                <th>Transaction Type</th>
+                <th>Patient Role</th>
+                <th>Special Tag</th>
+                <th>Transaction Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ticket in tickets %}
+            <tr>
+                <td>{{ ticket.queue_number }}</td>
+                <td>{{ ticket.get_transaction_type_display }}</td>
+                <td>{{ ticket.get_role_display }}</td>
+                <td>{{ ticket.get_special_tag_display }}</td>
+                <td>{{ ticket.transaction_time_local|date:"Y-m-d H:i:s" }}</td>
+                <td>
+                    {% if ticket.label == "Being Served" %}
+                        <span style="font-weight: bold; color: green;">Being Served</span>
+                    {% elif ticket.label == "Next" %}
+                        <span style="font-weight: bold; color: orange;">Next</span>
+                    {% else %}
+                        <span style="color: gray;">In Queue</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No tickets in the queue</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+{% else %}
+    <p class="text-center">Currently have no queue.</p>
+{% endif %}
+
+</div>
+
+<!-- Add a Proceed button below the table -->
+{% if tickets %}
+<!-- Form action references the first ticket in the queue -->
+<form action="{% url 'kiosk:proceed_next_patient' tickets.0.id %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Proceed</button>
+</form>
+{% else %}
+    <p>No patients in the queue.</p>
+{% endif %}
+
+{% endif %}
+
+
+
+
+{% endblock %}

@@ -1,10 +1,205 @@
+{% load static %}
+{% load custom_filters %}
+{% load widget_tweaks %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}My Application{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme) {
+                document.documentElement.setAttribute("data-theme", savedTheme);
+            }
+        })();
+    </script>
 </head>
-<body>
-    {% block content %}{% endblock %}
+<body style="font-family: 'Poppins', sans-serif;">
+    <div class="drawer lg:drawer-open">
+        <input id="left-sidebar-drawer" type="checkbox" class="drawer-toggle">
+
+        <div class="drawer-content flex flex-col">
+            
+            <!-- Message Alert-->
+                {% if messages %}
+                    <div class="toast messages top-0 z-50">
+                    {% for message in messages %}
+                        <div role="alert" class="alert {% if message.tags %} {{ message.tags }} {% else %} alert-success{% endif %}">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 shrink-0 stroke-current"
+                            fill="none"
+                            viewBox="0 0 24 24">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span class="">{{ message }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            <!-- Main Content -->
+            <div class="flex-1 md:pt-4 pt-4 px-6  bg-base-200">
+              <h1 class="text-2xl font-semibold">
+                  {% block heading %}Dashboard{% endblock %}
+              </h1>
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+        <div class="drawer-side z-30 bg-base-100">
+            <label for="left-sidebar-drawer" class="drawer-overlay"></label>
+            <div class="flex flex-col h-screen">
+              <div class="flex-grow">
+                <ul class="menu pt-2 px-4 w-80 bg-base-100 space-y-2 text-base-content">
+                  <li class="mb-2 font-semibold text-3xl">
+                      <a href="/projects/dashboard">
+                          <img class="mask mask-squircle w-10 mr-5" src="{% static 'logo/logo.png' %}" alt="Omnia Logo">
+                          Bulsu Clinic
+                      </a>
+                  </li>
+                      <span class="py-1"></span>
+                  {% if request.user.is_superuser %}
+                      <li>
+                          <a href="{% url 'staff_list' %}"
+                             class="flex items-center p-2 text-base font-medium rounded-lg transition duration-75 {% if request.path == '/projects/dashboard/' %}active{% endif %}"
+                          >
+                              <svg
+                                  aria-hidden="true"
+                                  class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
+                                  <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+                                </svg>
+                             <span class="ml-3">Manage Staff</span>
+                          </a>
+                      </li>
+                  {% else %}
+                  <li>
+                    <a href="{% url 'nurse_dashboard' %}"
+                       class="flex items-center p-2 text-base font-medium rounded-lg transition duration-75 {% if 'tasks' in request.path %}active{% endif %}">
+                        <svg class="w-6 h-6 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4Zm0 6h16v6H4v-6Z" clip-rule="evenodd"/>
+                          <path fill-rule="evenodd" d="M5 14a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Zm5 0a1 1 0 0 1 1-1h5a1 1 0 1 1 0 2h-5a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                        </svg>
+                       <span class="ml-3">Dashboard</span>
+                    </a>
+                   </li>
+                   <li>
+                    <a href="{% url 'queue' %}"
+                       class="flex items-center p-2 text-base font-medium rounded-lg transition duration-75 {% if 'tasks' in request.path %}active{% endif %}">
+                        <svg class="w-6 h-6 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4Zm0 6h16v6H4v-6Z" clip-rule="evenodd"/>
+                          <path fill-rule="evenodd" d="M5 14a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Zm5 0a1 1 0 0 1 1-1h5a1 1 0 1 1 0 2h-5a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                        </svg>
+                       <span class="ml-3">Queuing</span>
+                    </a>
+                   </li>
+                   <li>
+                    <a href="{% url 'patient_list' %}"
+                       class="flex items-center p-2 text-base font-medium rounded-lg transition duration-75 {% if 'tasks' in request.path %}active{% endif %}">
+                        <svg class="w-6 h-6 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" d="M4 5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4Zm0 6h16v6H4v-6Z" clip-rule="evenodd"/>
+                          <path fill-rule="evenodd" d="M5 14a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Zm5 0a1 1 0 0 1 1-1h5a1 1 0 1 1 0 2h-5a1 1 0 0 1-1-1Z" clip-rule="evenodd"/>
+                        </svg>
+                       <span class="ml-3">Patients</span>
+                    </a>
+                   </li>
+                  {% endif %}
+                </ul>
+              </div>
+                <footer class="dropdown dropdown-top border m-3 rounded-lg shadow-md">
+                <label tabindex="0" class="btn btn-ghost w-full flex gap-3 px-5">
+                  <div class="avatar">
+                    <div class="w-10 rounded-full">
+                        <img src="{% if request.user.profile_picture %}{{ request.user.profile_picture.url }}{% else %}{% static 'default-profile.png' %}{% endif %}" alt="Profile">
+                    </div>
+                  </div>
+                  <div class="flex-grow">{{request.user.email}}</div>
+                </label>
+                <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+                    <li class="justify-between">
+                        <a href="{% url 'view_profile' %}">My Profile</a>
+                    </li>
+                    <div class="divider mt-0 mb-0"></div>
+                    <li>
+                        <button class="hover:text-black-20" onclick="logout_modal.showModal()">
+                            Logout
+                        </button>
+                    </li>
+                </ul>
+              </footer>
+            </div>
+            <div>
+            </div>
+        </div>
+
+        <dialog id="logout_modal" class="modal">
+          <div class="modal-box">
+
+              <form method="dialog">
+                  <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+              </form>
+
+              <h3 class="text-lg font-bold">Confirm Logout</h3>
+              <p class="py-4">Are you sure you want to log out?</p>
+
+              <div class="modal-action">
+                  <button class="btn" onclick="logout_modal.close()">Cancel</button>
+                  <form method="post" action="{% url 'logout' %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-error">Logout</button>
+                  </form>
+              </div>
+          </div>
+      </dialog>
+
+    </div>
+
+<script>
+    // Automatically remove toasts after 3 seconds
+    setTimeout(() => {
+        const toasts = document.querySelectorAll('.toast .alert');
+        toasts.forEach((toast) => toast.remove());
+    }, 3000);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const themeSelect = document.querySelector(".swap select");
+
+        // Load the theme from localStorage if it exists
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme) {
+            document.documentElement.setAttribute("data-theme", savedTheme);
+            themeSelect.value = savedTheme;
+        }
+
+        // Listen for changes to the select element
+        themeSelect.addEventListener("change", function () {
+            const selectedTheme = themeSelect.value;
+
+            // Apply the theme
+            document.documentElement.setAttribute("data-theme", selectedTheme);
+
+            // Save the theme to localStorage
+            localStorage.setItem("theme", selectedTheme);
+        });
+    });
+
+</script>
 </body>
 </html>
