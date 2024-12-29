@@ -1,34 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
 from django.utils.crypto import get_random_string
-from .models import CustomUser
-from .models import CustomUserManager
-from .forms import ProfileForm, CustomPasswordChangeForm
-from django.contrib.auth.forms import AuthenticationForm
+from django.utils.timezone import localtime, now
+from .models import CustomUser, Patient, MedicalRecord
 from kiosk.models import Ticket
-from django.db import models
-from django.middleware.csrf import get_token
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.timezone import localtime
-from django.http import HttpResponseRedirect
-from .models import Patient, MedicalRecord
-from .forms import PatientForm, MedicalRecordForm
-from .models import Patient
-from django.db.models import Case, When, Value, IntegerField
-from django.contrib.auth.decorators import login_required
-from django.db.models import Count
-from django.http import HttpResponseForbidden
-from django.utils.timezone import now
+from .forms import ProfileForm, CustomPasswordChangeForm, PatientForm, MedicalRecordForm
+from django.db import connection
+from django.db.models import Case, When, Value, IntegerField, Count, Avg, Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Count, Avg
-from .models import Patient
-from django.db.models import Q
-from django.contrib.auth import update_session_auth_hash, logout, authenticate, login
 from django.contrib.auth.views import LoginView
+from django.views.decorators.csrf import csrf_exempt
 
 
 # Helper function to check if the user is a super admin
@@ -67,7 +54,7 @@ def super_admin_logout(request):
 
 @user_passes_test(is_super_admin, login_url='super_admin_login')
 def super_admin_dashboard(request):
-    return render(request, 'admin/super_admin_dashboard.html', {'user': request.user})
+     return redirect('staff_list')
 
 @csrf_exempt
 @user_passes_test(is_super_admin, login_url='super_admin_login')
@@ -172,26 +159,13 @@ def staff_login(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-        role = request.POST.get("role")
 
         user = authenticate(request, username=username, password=password)
 
         if user and not user.is_superuser:
             login(request, user)
-
-            # Assign a unique session key for the user
             request.session['user_role'] = user.role
-
-            # Redirect based on role
-            if user.role == 'nurse':
-                return redirect('nurse_dashboard')
-            elif user.role == 'dentist':
-                return redirect('dentist_dashboard')
-            elif user.role == 'physician':
-                return redirect('physician_dashboard')
-            else:
-                messages.error(request, "Invalid role.")
-                return redirect('staff_login')
+            return redirect('staff_dashboard')
         else:
             messages.error(request, "Invalid credentials or unauthorized access.")
             return redirect('staff_login')
@@ -199,195 +173,65 @@ def staff_login(request):
     return render(request, 'staff/staff_login.html')
 
 @login_required
-def nurse_dashboard(request):
-    if request.user.role != 'nurse':
-        return HttpResponseForbidden("You are not authorized to access this page.")
-    # Queue data for nurses
-    tickets = Ticket.objects.filter(
-    transaction_group='NURSE',
-    checked_in=False
-).annotate(
-    # Assign role priority: FACULTY (2), PERSONNEL (2), STUDENT (1)
-    role_priority=Case(
-        When(role='FACULTY', then=Value(2)),
-        When(role='PERSONNEL', then=Value(2)),
-        When(role='STUDENT', then=Value(1)),
-        default=Value(0),
-        output_field=IntegerField(),
-    ),
-    # Special tag priority: PWD/SENIOR_CITIZEN (1), NONE (0)
-    special_tag_priority=Case(
-        When(special_tag='PWD', then=Value(1)),
-        When(special_tag='SENIOR_CITIZEN', then=Value(1)),
-        default=Value(0),
-        output_field=IntegerField(),
-    )
-).order_by(
-    '-special_tag_priority',  # Highest special tag first
-    '-role_priority',         # Highest role priority next
-    'transaction_time'        # Oldest transaction time last
-)
+def staff_dashboard(request):
+    user = request.user
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())  # Start of the current week
+    start_of_month = today.replace(day=1)  # Start of the current month
 
-    for idx, ticket in enumerate(tickets):
-        # Assign status labels
-        if idx == 0:
-            ticket.label = "Being Served"
-        elif idx == 1:
-            ticket.label = "Next"
-        else:
-            ticket.label = "In Queue"
+    # **1. Total Patients Attended Today**
+    total_patients_today = MedicalRecord.objects.filter(
+        attending_staff=user,
+        date_time__date=today
+    ).count()
 
-        # Localize transaction time
-        ticket.transaction_time_local = localtime(ticket.transaction_time)
+    # **2. Pending Appointments**
+    pending_appointments = Ticket.objects.filter(
+        transaction_group=user.role.upper(),
+        scheduled_time__date=today,
+        checked_in=False
+    ).count()
 
-        # Truncate details for "Others" and keep full text for tooltip
-        if ticket.transaction_type == "Other" and ticket.details:
-            ticket.truncated_details = ticket.details[:15] + "..."  # Show first 15 characters with "..."
-        else:
-            ticket.truncated_details = ticket.get_transaction_type_display()
+    # **3. Current Queue Status**
+    current_queue_status = Ticket.objects.filter(
+        transaction_group=user.role.upper(),
+        checked_in=False
+    ).count()
 
-    # Initialize patients with a default value (all patients)
+    # **4. Average Consultation Duration (Using Raw SQL Query for SQLite)**
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT AVG(
+                (JULIANDAY(date_time) - JULIANDAY('now')) * 24 * 60
+            ) AS avg_duration
+            FROM my_app_medicalrecord
+            WHERE attending_staff_id = %s AND DATE(date_time) = DATE('now')
+        """, [user.id])
+        avg_duration = cursor.fetchone()[0]
+
+    average_consultation_duration = round(avg_duration, 2) if avg_duration else None
+
+    # **5. Monthly/Weekly Performance Metrics**
+    weekly_patients = MedicalRecord.objects.filter(
+        attending_staff=user,
+        date_time__date__gte=start_of_week
+    ).count()
+
+    monthly_patients = MedicalRecord.objects.filter(
+        attending_staff=user,
+        date_time__date__gte=start_of_month
+    ).count()
+
+    return render(request, 'staff/staff_dashboard.html', {
+        'total_patients_today': total_patients_today,
+        'pending_appointments': pending_appointments,
+        'current_queue_status': current_queue_status,
+        'average_consultation_duration': average_consultation_duration,
+        'weekly_patients': weekly_patients,
+        'monthly_patients': monthly_patients,
+    })
     
-    # Apply filters if present
-    query = request.GET.get('q')
-    role_filter = request.GET.get('role')
-    patients = Patient.objects.all()
-
-    if query:
-            patients = patients.filter(first_name__icontains=query) | patients.filter(last_name__icontains=query)
-
-    if role_filter:
-            patients = patients.filter(role=role_filter)
-
-    # Render the template with context
-    return render(request, 'staff/nurse_dashboard.html', {
-        'tickets': tickets,
-        'patients': patients,
-    })
-
-@login_required
-def dentist_dashboard(request):
-    if request.user.role != 'dentist':
-        return HttpResponseForbidden("You are not authorized to access this page.")
-    # Retrieve tickets
-    tickets = Ticket.objects.filter(
-        transaction_group='DENTIST',
-        checked_in=False
-    ).annotate(
-    # Assign role priority: FACULTY (2), PERSONNEL (2), STUDENT (1)
-    role_priority=Case(
-        When(role='FACULTY', then=Value(2)),
-        When(role='PERSONNEL', then=Value(2)),
-        When(role='STUDENT', then=Value(1)),
-        default=Value(0),
-        output_field=IntegerField(),
-    ),
-    # Special tag priority: PWD/SENIOR_CITIZEN (1), NONE (0)
-    special_tag_priority=Case(
-        When(special_tag='PWD', then=Value(1)),
-        When(special_tag='SENIOR_CITIZEN', then=Value(1)),
-        default=Value(0),
-        output_field=IntegerField(),
-    )
-).order_by(
-    '-special_tag_priority',  # Highest special tag first
-    '-role_priority',         # Highest role priority next
-    'transaction_time'        # Oldest transaction time last
-)
-    # Annotate tickets with labels
-    for idx, ticket in enumerate(tickets):
-        if idx == 0:
-            ticket.label = "Being Served"
-        elif idx == 1:
-            ticket.label = "Next"
-        else:
-            ticket.label = "In Queue"
-
-        ticket.transaction_time_local = localtime(ticket.transaction_time)
-
-    # Retrieve patient list
-    query = request.GET.get('q')
-    role_filter = request.GET.get('role')
-    patients = Patient.objects.all()
-    if query:
-        patients = patients.filter(first_name__icontains=query) | patients.filter(last_name__icontains=query)
-    if role_filter:
-        patients = patients.filter(role=role_filter)
-
-    return render(request, 'staff/dentist_dashboard.html', {
-        'tickets': tickets,
-        'patients': patients,
-    })
-
-@login_required
-def physician_dashboard(request):
-    if request.user.role != 'physician':
-        return HttpResponseForbidden("You are not authorized to access this page.")
-    # Queue data for nurses
-    tickets = Ticket.objects.filter(
-        transaction_group='PHYSICIAN',
-        checked_in=False
-
-    ).annotate(
-    # Assign role priority: FACULTY (2), PERSONNEL (2), STUDENT (1)
-    role_priority=Case(
-        When(role='FACULTY', then=Value(2)),
-        When(role='PERSONNEL', then=Value(2)),
-        When(role='STUDENT', then=Value(1)),
-        default=Value(0),
-        output_field=IntegerField(),
-    ),
-    # Special tag priority: PWD/SENIOR_CITIZEN (1), NONE (0)
-    special_tag_priority=Case(
-        When(special_tag='PWD', then=Value(1)),
-        When(special_tag='SENIOR_CITIZEN', then=Value(1)),
-        default=Value(0),
-        output_field=IntegerField(),
-    )
-).order_by(
-    '-special_tag_priority',  # Highest special tag first
-    '-role_priority',         # Highest role priority next
-    'transaction_time'        # Oldest transaction time last
-)
-    for idx, ticket in enumerate(tickets):
-        if idx == 0:
-            ticket.label = "Being Served"
-        elif idx == 1:
-            ticket.label = "Next"
-        else:
-            ticket.label = "In Queue"
-        ticket.transaction_time_local = localtime(ticket.transaction_time)
-
-    query = request.GET.get('q')
-    role_filter = request.GET.get('role')
-    patients = Patient.objects.all()
-    if query:
-        patients = patients.filter(first_name__icontains=query) | patients.filter(last_name__icontains=query)
-    if role_filter:
-        patients = patients.filter(role=role_filter)
-            
-    return render(request, 'staff/physician_dashboard.html', {
-        'tickets': tickets,
-        'patients': patients,
-    })
-
-def render_dashboard(request, transaction_group, template_name):
-    tickets = Ticket.objects.filter(
-        transaction_group=transaction_group,
-        checked_in=False
-    ).annotate(
-        priority=models.Value(0, output_field=models.IntegerField())  # Default value
-    )
-
-    # Annotate with priority values
-    for ticket in tickets:
-        ticket.priority = ticket.get_priority()
-
-    # Sort by priority and transaction time
-    sorted_tickets = sorted(tickets, key=lambda x: (-x.priority, x.transaction_time))
-
-    return render(request, template_name, {'tickets': sorted_tickets})
-
+    
 @login_required
 def patient_dashboard(request):
     if request.user.role != 'patient':

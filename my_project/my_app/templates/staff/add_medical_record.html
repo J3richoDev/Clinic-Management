@@ -1,6 +1,38 @@
-<h1>Add Medical Record for {{ patient.first_name }} {{ patient.last_name }}</h1>
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks%}
+
+{% block title %}Queue for Walk-In Patients{% endblock %}
+{% block heading %}Queue for Walk-In Patients{% endblock %}
+
+{% block content %}
+
+{% if not request.user.is_superuser %}
+
+<div class="card w-full p-6 bg-base-100 shadow-xl mt-2">
+
+    <h1 class="font-bold text-xl mb-5">Add Medical Record for <span class="text-blue-500">{{ patient.first_name }} {{ patient.last_name }}</span></h1>
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Record</button>
+    {{ form|crispy }}
+    <div class="flex justify-end ">
+        
+    <button class="btn btn-primary text-white" type="submit">Save Record</button>
+    </div>
 </form>
+
+
+</div>
+
+
+{% endif %}
+{% endblock %}
+
+
+
+
+
+
+
+
