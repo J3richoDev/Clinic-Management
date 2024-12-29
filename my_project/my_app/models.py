@@ -128,7 +128,7 @@ class PatientAccount(models.Model):
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True, null=True)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
     address = models.TextField(blank=False, null=False)
     age = models.PositiveIntegerField()
     sex = models.CharField(max_length=10)
@@ -138,11 +138,12 @@ class PatientAccount(models.Model):
     emergency_contact = models.CharField(max_length=50)
     relation = models.CharField(max_length=50)
     contact_number = models.CharField(max_length=15)
-    blood_type = models.CharField(max_length=5, blank=True, null=True)
+    blood_type = models.CharField(max_length=20, blank=True, null=True)
     allergies = models.TextField(blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STUDENT)
     password = models.CharField(max_length=128, blank=True, null=True)  # Nullable and blank allowed
     created_at = models.DateTimeField(auto_now_add=True)
+    date_of_birth = models.DateField(blank=True, null=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)  # Link to User model
 
 

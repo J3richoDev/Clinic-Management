@@ -23,6 +23,7 @@ class PatientAccountSerializer(serializers.ModelSerializer):
         last_name = validated_data.get('last_name')
         age = validated_data.get('age')
         sex = validated_data.get('sex')
+        date_of_birth = validated_data.get('date_of_birth')
         password = validated_data.pop('password', None)
 
         # Search for matching patient details
@@ -30,7 +31,8 @@ class PatientAccountSerializer(serializers.ModelSerializer):
             first_name=first_name,
             last_name=last_name,
             age=age,
-            sex=sex
+            sex=sex,
+            date_of_birth=date_of_birth
         ).first()
 
         if matching_patient:

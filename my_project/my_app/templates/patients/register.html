@@ -56,7 +56,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div>
                     <label class="font-medium">Date of Birth</label>
-                    <input type="date" class="input input-bordered w-full" id="dob" onchange="calculateAge()">
+                    <input type="date" class="input input-bordered w-full" id="date_of_birth" onchange="calculateAge()">
                 </div>
                 <div>
                     <label class="font-medium">Age</label>
@@ -196,6 +196,7 @@
                     <label class="font-medium">Blood Type</label>
                     <select id="blood_type" class="select select-bordered w-full">
                         <option value="">Select Blood Type</option>
+                        <option value="Unknown">Unknown</option>
                         <option value="A+">A+</option>
                         <option value="A-">A-</option>
                         <option value="B+">B+</option>
@@ -297,7 +298,7 @@
     document.addEventListener('DOMContentLoaded', toggleFieldsBasedOnAccountType);
 
     function calculateAge() {
-        const dobInput = document.getElementById('dob').value;
+        const dobInput = document.getElementById('date_of_birth').value;
         const ageInput = document.getElementById('age');
         
         if (dobInput) {
@@ -341,6 +342,7 @@ async function registerPatient() {
         address: getValue('#address', page1Form),
         age: getValue('#age', page1Form),
         sex: getValue('select', page1Form),
+        date_of_birth: getValue('#date_of_birth', page1Form),
         campus: getValue('input[placeholder="Campus"]', page2Form),
         college: getValue('input[placeholder="College/Office"]', page2Form),
         course_year: getValue('input[placeholder="Course & Year"]', page2Form),
