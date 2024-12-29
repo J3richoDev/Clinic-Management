@@ -47,5 +47,6 @@ urlpatterns = [
     path('physician/home/', views.physician_home, name='physician_home'),
 
      path('api/dashboard/<str:staff_type>/', DashboardStatsAPIView.as_view(), name='dashboard_api'),
+     path('register/', views.patient_registration, name='patient_register'),
 ]
 

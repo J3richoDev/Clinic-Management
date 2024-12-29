@@ -626,3 +626,21 @@ class DashboardStatsAPIView(APIView):
             "average_age": avg_age["age__avg"],
         }
         return Response(data)
+    
+
+# views.py
+from django.shortcuts import render, redirect
+from .forms import PatientAccountForm
+from django.contrib import messages
+
+def patient_registration(request):
+    if request.method == 'POST':
+        form = PatientAccountForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Patient account created successfully!')
+            return redirect('patients/register')
+    else:
+        form = PatientAccountForm()
+    
+    return render(request, 'patients/register.html', {'form': form})

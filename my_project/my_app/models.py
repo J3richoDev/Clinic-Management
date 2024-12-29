@@ -161,4 +161,46 @@ class MedicalRecord(models.Model):
             if str(self.id) == str(data.get('_auth_user_id')):
                 return True
         return False
-        
+    
+
+
+
+from django.db import models
+
+class PatientAccount(models.Model):
+    STUDENT = 'Student'
+    FACULTY = 'Faculty'
+    NON_ACADEMIC = 'Non-academic'
+
+    ROLE_CHOICES = [
+        (STUDENT, 'Student'),
+        (FACULTY, 'Faculty'),
+        (NON_ACADEMIC, 'Non-academic'),
+    ]
+
+    first_name = models.CharField(max_length=50)
+    middle_name = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    address = models.TextField()
+    age = models.PositiveIntegerField()
+    sex = models.CharField(max_length=10)
+    campus = models.CharField(max_length=50, blank=True, null=True)
+    college = models.CharField(max_length=50, blank=True, null=True)
+    course_year = models.CharField(max_length=50, blank=True, null=True)
+    emergency_contact = models.CharField(max_length=50)
+    relation = models.CharField(max_length=50)
+    contact_number = models.CharField(max_length=15)
+    blood_type = models.CharField(max_length=5, choices=[
+        ('A+', 'A+'), ('A-', 'A-'),
+        ('B+', 'B+'), ('B-', 'B-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-'),
+        ('O+', 'O+'), ('O-', 'O-')
+    ])
+    allergies = models.TextField(blank=True, null=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STUDENT)  
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
