@@ -644,3 +644,15 @@ def patient_registration(request):
         form = PatientAccountForm()
     
     return render(request, 'patients/register.html', {'form': form})
+
+from rest_framework import generics
+from .models import PatientAccount
+from .serializers import PatientAccountSerializer
+from rest_framework.permissions import AllowAny
+
+class PatientRegistrationAPIView(generics.CreateAPIView):
+
+    queryset = PatientAccount.objects.all()
+    serializer_class = PatientAccountSerializer
+    permission_classes = [AllowAny]
+

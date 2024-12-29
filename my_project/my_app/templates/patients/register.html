@@ -49,6 +49,7 @@
                     <label class="font-medium">Middle Name</label>
                     <input type="text" class="input input-bordered w-full" placeholder="Middle Name">
                 </div>
+
             </div>
 
             <!-- DOB, Age, Sex -->
@@ -73,9 +74,9 @@
             <!-- Address -->
             <div class="mt-4">
                 <label class="font-medium">Address</label>
-                <input type="text" class="input input-bordered w-full" placeholder="Lot.no./Brgy. or Subd/Street/Province or City/Municipality
-                ">
+                <input type="text" id="address" class="input input-bordered w-full" placeholder="Enter your address">
             </div>
+            
 
             <!-- Email -->
             <div class="mt-4">
@@ -98,7 +99,8 @@
                     </div>
                 </div>
             </div>
-            
+            <p id="errorMessagePage1" class="text-red-500 mt-2 text-center"></p>
+
             <!-- Next Button -->
             <button type="button" class="btn btn-primary w-full mt-6 text-white" onclick="showPage2()">Next →</button>
         </form>
@@ -142,7 +144,7 @@
                     <select id="accountType" class="select select-bordered w-full" onchange="toggleFieldsBasedOnAccountType()">
                         <option value="Student">Student</option>
                         <option value="Faculty">Faculty</option>
-                        <option value="Non-Academic">Non-Academic</option>
+                        <option value="Non-academic">Non-academic</option>
                     </select>
                 </div>
     
@@ -187,17 +189,20 @@
                 <!-- Blood Type -->
                 <div>
                     <label class="font-medium">Blood Type</label>
-                    <select class="select select-bordered w-full">
-                        <option>A+</option>
-                        <option>A-</option>
-                        <option>B+</option>
-                        <option>B-</option>
-                        <option>AB+</option>
-                        <option>AB-</option>
-                        <option>O+</option>
-                        <option>O-</option>
+                    <select id="blood_type" class="select select-bordered w-full">
+                        <option value="">Select Blood Type</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
                     </select>
                 </div>
+                
+                
             </div>
     
             <!-- Allergies -->
@@ -205,9 +210,10 @@
                 <label class="font-medium">Allergies (if any)</label>
                 <textarea class="textarea textarea-bordered w-full"></textarea>
             </div>
-    
+            <p id="errorMessagePage2" class="text-red-500 mt-2 text-center"></p>
             <!-- Buttons: Back and Register -->
             <div class="flex justify-between mt-6">
+           
                 <button type="button" class="btn btn-primary text-white" onclick="showPage1()">← Back</button>
                 <button type="submit" class="btn btn-primary text-white">Register</button>
             </div>
@@ -218,8 +224,36 @@
 </div>
 
 <script>
-    // Navigate to Step 2
+    
     function showPage2() {
+        const formData = {
+            first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
+            last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
+            email: getValue('input[placeholder="Enter your email"]', document.getElementById('registrationFormPage1')),
+            address: getValue('#address', document.getElementById('registrationFormPage1')),
+            password: getValue('#password1', document.getElementById('registrationFormPage1')),
+            confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
+        };
+    
+        // Basic validation
+        if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password) {
+            displayError('All fields are required in Step 1!', 'errorMessagePage1');
+            return;
+        }
+    
+        if (formData.password !== formData.confirm_password) {
+            displayError('Passwords do not match!', 'errorMessagePage1');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            displayError('Please enter a valid email address (e.g., example@domain.com).', 'errorMessagePage1');
+            return;
+        }
+    
+        // Clear previous error and proceed
+        displayError('', 'errorMessagePage1');
         document.getElementById('page1').classList.add('hidden');
         document.getElementById('page2').classList.remove('hidden');
     }
@@ -234,24 +268,20 @@
     function toggleFieldsBasedOnAccountType() {
         const accountType = document.getElementById('accountType').value;
 
-        // Field Elements
         const idNumberField = document.getElementById('idNumberField');
         const campusField = document.getElementById('campusField');
         const collegeField = document.getElementById('collegeField');
         const courseField = document.getElementById('courseField');
 
-        // Reset Visibility
         idNumberField.style.display = 'block';
         campusField.style.display = 'block';
         collegeField.style.display = 'block';
         courseField.style.display = 'block';
 
         if (accountType === 'Faculty') {
-            // Hide ID Number and Course & Year
             idNumberField.style.display = 'none';
             courseField.style.display = 'none';
-        } else if (accountType === 'Non-Academic') {
-            // Hide ID Number, Campus, College/Office, and Course & Year
+        } else if (accountType === 'Non-academic') {
             idNumberField.style.display = 'none';
             campusField.style.display = 'none';
             collegeField.style.display = 'none';
@@ -259,7 +289,6 @@
         }
     }
 
-    // Run on page load to apply default state
     document.addEventListener('DOMContentLoaded', toggleFieldsBasedOnAccountType);
 
     function calculateAge() {
@@ -274,16 +303,83 @@
             const monthDiff = today.getMonth() - dob.getMonth();
             const dayDiff = today.getDate() - dob.getDate();
             
-            // Adjust age if birthday hasn't occurred this year yet
             if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
                 age--;
             }
             
-            ageInput.value = age > 0 ? age : 0; // Ensure age doesn't go negative
+            ageInput.value = age > 0 ? age : 0; 
         } else {
-            ageInput.value = ''; // Clear age if no DOB is selected
+            ageInput.value = '';
         }
     }
+
+    // Submit Form Data
+    // Utility function to safely get values from form fields
+function getValue(selector, parent = document) {
+    const element = parent.querySelector(selector);
+    return element ? element.value.trim() : null;
+}
+function displayError(message, elementId) {
+    const errorElement = document.getElementById(elementId);
+    errorElement.textContent = message;
+}
+
+async function registerPatient() {
+    const page1Form = document.getElementById('registrationFormPage1');
+    const page2Form = document.getElementById('registrationFormPage2');
+
+    const formData = {
+        first_name: getValue('input[placeholder="First Name"]', page1Form),
+        middle_name: getValue('input[placeholder="Middle Name"]', page1Form),
+        last_name: getValue('input[placeholder="Surname"]', page1Form),
+        email: getValue('input[placeholder="Enter your email"]', page1Form),
+        address: getValue('#address', page1Form),
+        age: getValue('#age', page1Form),
+        sex: getValue('select', page1Form),
+        campus: getValue('input[placeholder="Campus"]', page2Form),
+        college: getValue('input[placeholder="College/Office"]', page2Form),
+        course_year: getValue('input[placeholder="Course & Year"]', page2Form),
+        emergency_contact: getValue('input[placeholder="Contact Name"]', page2Form),
+        relation: getValue('input[placeholder="Relation"]', page2Form),
+        contact_number: getValue('input[placeholder="Contact No"]', page2Form),
+        blood_type: document.getElementById('blood_type').value.trim(),
+        allergies: getValue('textarea', page2Form),
+        role: getValue('#accountType', page2Form),
+        password: getValue('#password1', page1Form)
+    };
+
+    try {
+        const response = await fetch('/my_app/api/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(formData),
+        });
+
+        if (response.ok) {
+            alert('Registration Successful!');
+            window.location.href = '/login/';
+        } else {
+            const errorData = await response.json();
+            console.error('Error:', errorData);
+            displayError(errorData.message || 'Registration failed. Please try again.', 'errorMessagePage2');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        displayError('An error occurred while submitting the form.', 'errorMessagePage2');
+    }
+}
+
+// Event Listener for Form Submission
+document.querySelector('#registrationFormPage2').addEventListener('submit', function(event) {
+    event.preventDefault();
+    registerPatient();
+});
+
 </script>
+
+
 
 {% endblock %}

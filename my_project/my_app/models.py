@@ -167,6 +167,9 @@ class MedicalRecord(models.Model):
 
 from django.db import models
 
+from django.db import models
+from django.contrib.auth.hashers import make_password
+
 class PatientAccount(models.Model):
     STUDENT = 'Student'
     FACULTY = 'Faculty'
@@ -182,7 +185,7 @@ class PatientAccount(models.Model):
     middle_name = models.CharField(max_length=50, blank=True, null=True)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
-    address = models.TextField()
+    address = models.TextField(blank=False, null=False)
     age = models.PositiveIntegerField()
     sex = models.CharField(max_length=10)
     campus = models.CharField(max_length=50, blank=True, null=True)
@@ -191,16 +194,19 @@ class PatientAccount(models.Model):
     emergency_contact = models.CharField(max_length=50)
     relation = models.CharField(max_length=50)
     contact_number = models.CharField(max_length=15)
-    blood_type = models.CharField(max_length=5, choices=[
-        ('A+', 'A+'), ('A-', 'A-'),
-        ('B+', 'B+'), ('B-', 'B-'),
-        ('AB+', 'AB+'), ('AB-', 'AB-'),
-        ('O+', 'O+'), ('O-', 'O-')
-    ])
+    blood_type = models.CharField(max_length=5, blank=True, null=True)
     allergies = models.TextField(blank=True, null=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STUDENT)  
-
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STUDENT)
+    password = models.CharField(max_length=128, blank=True, null=True)  # Nullable and blank allowed
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Hash the password before saving, if provided.
+        """
+        if self.password and not self.password.startswith('pbkdf2_sha256$'):
+            self.password = make_password(self.password)
+        super(PatientAccount, self).save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
