@@ -7,7 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.utils.crypto import get_random_string
 from django.utils.timezone import localtime, now
-from .models import CustomUser, Patient, MedicalRecord
+from .models import CustomUser, PatientAccount, MedicalRecord
 from kiosk.models import Ticket
 from .forms import ProfileForm, CustomPasswordChangeForm, PatientForm, MedicalRecordForm
 from django.db import connection
@@ -16,7 +16,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.views import LoginView
 from django.views.decorators.csrf import csrf_exempt
+from .forms import PatientAccountForm
 
+
+def home(request):
+    return render(request, 'home.html')
 
 # Helper function to check if the user is a super admin
 def is_super_admin(user):
@@ -281,9 +285,6 @@ def delete_account(request):
         return redirect('staff_login')
     return render(request, 'accounts/delete_account.html')
 
-def home(request):
-    """Render the home page."""
-    return render(request, 'home.html')  # Ensure you have a `home.html` template
 
 def proceed_next_patient(request):
     # Get the top-priority ticket (the one "Being Served")
@@ -304,18 +305,18 @@ def proceed_next_patient(request):
 def patient_list(request):
     query = request.GET.get('q')
     if query:
-        patients = Patient.objects.filter(
+        patients = PatientAccount.objects.filter(
             first_name__icontains=query
-        ) | Patient.objects.filter(
+        ) | PatientAccount.objects.filter(
             last_name__icontains=query
         )
     else:
-        patients = Patient.objects.all()
+        patients = PatientAccount.objects.all()
 
     return render(request, 'staff/patient_list.html', {'patients': patients})
 
 def add_medical_record(request, patient_id):
-    patient = get_object_or_404(Patient, id=patient_id)
+    patient = get_object_or_404(PatientAccount, id=patient_id)
     if request.method == "POST":
         form = MedicalRecordForm(request.POST)
         if form.is_valid():
@@ -331,7 +332,7 @@ def add_medical_record(request, patient_id):
 
 def patient_detail(request, patient_id):
     # Retrieve the patient by their ID or return a 404 if not found
-    patient = get_object_or_404(Patient, id=patient_id)
+    patient = get_object_or_404(PatientAccount, id=patient_id)
 
     # Get all medical records associated with the patient
     medical_records = MedicalRecord.objects.filter(patient=patient).order_by('-date_time')
@@ -349,15 +350,7 @@ def add_patient(request):
             patient.added_by = request.user  # Assuming logged-in user is the staff member
             patient.save()
 
-            # Redirect based on staff role
-            if request.user.role == 'Nurse':
-                return redirect('nurse_dashboard')
-            elif request.user.role == 'Dentist':
-                return redirect('dentist_dashboard')
-            elif request.user.role == 'Physician':
-                return redirect('physician_dashboard')
-            else:
-                return redirect('home')  # Default fallback if no role matches
+            return redirect('staff_dashboard')  # Default fallback if no role matches
     else:
         form = PatientForm()
 
@@ -401,43 +394,66 @@ def queue_view(request):
     return render(request, 'staff/queue.html', {'tickets': tickets})
 
 @login_required
-def nurse_home(request):
-    if request.user.role != 'nurse':
-        return HttpResponseForbidden("Unauthorized Access")
+def queue_display(request):
+    # Fetch tickets currently being served and next in line
+    tickets = Ticket.objects.filter(
+        checked_in=False
+    ).order_by(
+        '-special_tag',  # Higher priority first
+        'transaction_time'  # Oldest first
+    )[:5]  # Display only the top 5 in the queue
     
-    dashboard_data = ''
-    context = {
-        'total_patients': dashboard_data['total_patients'],
-        'transaction_summary': dashboard_data['transaction_summary'],
-    }
+    for idx, ticket in enumerate(tickets):
+        if idx == 0:
+            ticket.label = "Being Served"
+        elif idx == 1:
+            ticket.label = "Next"
+        else:
+            ticket.label = "In Queue"
 
-    return render_staff_home(request, 'staff/nurse_home.html', 'NURSE')
-
-@login_required
-def dentist_home(request):
-    if request.user.role != 'dentist':
-        return HttpResponseForbidden("Unauthorized Access")
-
-    return render_staff_home(request, 'staff/dentist_home.html', 'DENTIST')
+    return render(request, 'staff/queue_display.html', {'tickets': tickets})
 
 @login_required
-def physician_home(request):
-    if request.user.role != 'physician':
-        return HttpResponseForbidden("Unauthorized Access")
+def next_patient(request):
+    # Determine the transaction group based on the user's role
+    if request.user.role in ['nurse', 'dentist', 'physician']:
+        transaction_group = request.user.role.upper()
+    else:
+        return HttpResponseForbidden("You are not authorized to perform this action.")
 
-    return render_staff_home(request, 'staff/physician_home.html', 'PHYSICIAN')
+    # Fetch the queue for this transaction group
+    tickets = Ticket.objects.filter(
+        transaction_group=transaction_group,
+        checked_in=False
+    ).order_by(
+        '-special_tag',  # Higher priority (PWD/Senior Citizen) first
+        'transaction_time'  # Oldest first
+    )
+
+    if tickets.exists():
+        # Mark the current "Being Served" ticket as checked-in
+        current_ticket = tickets.first()
+        current_ticket.checked_in = True
+        current_ticket.save()
+
+        # Logically, the next ticket in the queue will become "Being Served"
+        next_ticket = tickets[1] if len(tickets) > 1 else None
+        if next_ticket:
+            next_ticket.label = "Being Served"
+
+    return redirect('queue')
 
 # Reusable helper function for dashboard logic
 def render_staff_home(request, template_name, transaction_group):
     # Real-time statistics
-    total_patients = Patient.objects.count()
+    total_patients = PatientAccount.objects.count()
     today_appointments = Ticket.objects.filter(
         transaction_time__date=now().date(),
         transaction_group=transaction_group
     ).count()
 
     # Patient demographics
-    patient_roles = Patient.objects.values('role').annotate(total=Count('id'))
+    patient_roles = PatientAccount.objects.values('role').annotate(total=Count('id'))
 
     # Clinic performance insights
     total_tickets = Ticket.objects.filter(transaction_group=transaction_group).count()
@@ -457,7 +473,7 @@ class DashboardStatsAPIView(APIView):
     """
     def get(self, request, staff_type):
         # Filter patients by staff type
-        patients = Patient.objects.filter(staff_type=staff_type)
+        patients = PatientAccount.objects.filter(staff_type=staff_type)
 
         # Statistics
         total_patients = patients.count()
@@ -471,23 +487,10 @@ class DashboardStatsAPIView(APIView):
         }
         return Response(data)
     
-
-# views.py
-from django.shortcuts import render, redirect
-from .forms import PatientAccountForm
-from django.contrib import messages
-
 def patient_registration(request):
-    if request.method == 'POST':
-        form = PatientAccountForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Patient account created successfully!')
-            return redirect('patients/register')
-    else:
-        form = PatientAccountForm()
     
-    return render(request, 'patients/register.html', {'form': form})
+
+    return render(request, 'patients/register.html')
 
 from rest_framework import generics
 from .models import PatientAccount
