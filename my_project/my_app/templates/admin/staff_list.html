@@ -1,189 +1,153 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% load widget_tweaks%}
+{% load widget_tweaks %}
 
 {% block title %}Manage Staff{% endblock %}
 {% block heading %}Manage Staff{% endblock %}
 
 {% block content %}
-
 {% if request.user.is_superuser %}
 
 <dialog id="create_task_modal" class="modal">
-    <div class="modal-box w-6/12 max-w-5xl">
-        <div class="modal-action mt-0 flex items-center justify-between mb-8">
+    <div class="modal-box w-10/12 md:w-6/12 max-w-4xl">
+        <div class="modal-header flex justify-between items-center mb-4">
             <h3 class="text-2xl font-bold">Create Staff Account</h3>
             <form method="dialog">
-                <button class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center">
-                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                <button class="text-gray-400 hover:text-gray-900">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </form>
         </div>
+        
         <form method="POST" action="{% url 'add_staff' %}" enctype="multipart/form-data">
             {% csrf_token %}
-            <!-- First Name -->
-            <div class="mb-3">
-                <label for="first_name" class="form-label">First Name:</label>
-                <input type="text" name="first_name" class="form-control" id="first_name" required>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- First Name -->
+                <div>
+                    <label for="first_name" class="form-label">First Name:</label>
+                    <input type="text" name="first_name" class="form-control input input-bordered w-full" id="first_name" required>
+                </div>
+                <!-- Middle Name -->
+                <div>
+                    <label for="middle_name" class="form-label">Middle Name:</label>
+                    <input type="text" name="middle_name" class="form-control input input-bordered w-full" id="middle_name">
+                </div>
+                <!-- Last Name -->
+                <div>
+                    <label for="last_name" class="form-label">Last Name:</label>
+                    <input type="text" name="last_name" class="form-control input input-bordered w-full" id="last_name" required>
+                </div>
+                <!-- Role -->
+                <div>
+                    <label for="role" class="form-label">Role:</label>
+                    <select name="role" class="form-select select select-bordered w-full" id="role" required>
+                        <option value="nurse">Nurse</option>
+                        <option value="dentist">Dentist</option>
+                        <option value="physician">Physician</option>
+                    </select>
+                </div>
+                <!-- Username -->
+                <div class="col-span-1 md:col-span-2">
+                    <label for="username" class="form-label">Username (optional):</label>
+                    <input type="text" name="username" class="form-control input input-bordered w-full" id="username">
+                </div>
             </div>
-            <!-- Middle Name -->
-            <div class="mb-3">
-                <label for="middle_name" class="form-label">Middle Name:</label>
-                <input type="text" name="middle_name" class="form-control" id="middle_name">
-            </div>
-            <!-- Last Name -->
-            <div class="mb-3">
-                <label for="last_name" class="form-label">Last Name:</label>
-                <input type="text" name="last_name" class="form-control" id="last_name" required>
-            </div>
-            <!-- Role -->
-            <div class="mb-3">
-                <label for="role" class="form-label">Role:</label>
-                <select name="role" class="form-select" id="role" required>
-                    <option value="nurse">Nurse</option>
-                    <option value="dentist">Dentist</option>
-                    <option value="physician">Physician</option>
-                </select>
-            </div>
-            <!-- Username -->
-            <div class="mb-3">
-                <label for="username" class="form-label">Username (optional):</label>
-                <input type="text" name="username" class="form-control" id="username">
-            </div>
-            <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary w-100">Add Staff</button>
+            <button type="submit" class="btn btn-primary w-full mt-4">Add Staff</button>
         </form>
     </div>
 </dialog>
 
-<div class="header">
-    <div class="header-content">
-        <form method="get" action="{% url 'staff_list' %}" class="search-form">
-            <input type="text" name="search" class="form-control" placeholder="Search staff by name, email, or role" value="{{ search_query }}">
-            <button class="btn btn-primary" type="submit">Search</button>
-        </form>
-    </div>
-</div>
-
-
-<div class="flex items-center justify-between mb-4">
-    <button
-       class="btn btn-primary text-white"
-     onclick="create_task_modal.showModal()">
-        Create Account
+<div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <form method="get" action="{% url 'staff_list' %}" class="flex flex-grow items-center space-x-2">
+        <input type="text" name="search" class="input input-bordered w-full md:w-64" placeholder="Search by name, email, or role" value="{{ search_query }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    <button onclick="create_task_modal.showModal()" class="btn btn-primary mt-4 md:mt-0">
+        + Create Account
     </button>
 </div>
 
-<div class="card w-full p-6 bg-base-100 shadow-xl mt-2 max-h-[600px] overflow-y-auto min-h-[300px]">
-
-    <h2>Staff List</h2>
-
+<div class="card w-full p-4 bg-white shadow-md rounded-md">
+    <h2 class="text-xl font-bold mb-4">Staff List</h2>
     {% if staff_members %}
-    <div class="relative overflow-x-auto rounded-lg">
-      <table class="table w-full whitespace-no-wrap table-pin-rows table-pin-cols">
-        <thead>
-            <tr>
-                <th>Profile</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Date of Registration</th>
-                <th>Status</th>
-                <th>Password</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for staff in staff_members %}
-            <tr>
-                <td class="avatar">
-                    <img src="{{ staff.profile_picture.url|default:'/media/profile_pictures/default.jpg' }}" alt="Profile Picture">
-                    
-                </td>
-                <td>{{ staff.full_name }}</td>
-                <td>{{ staff.email }}</td>
-                <td>{{ staff.get_role_display }}</td>
-                <td>{{ staff.date_joined|date:"F d, Y" }}</td>
-                <td>
-                    {% if staff.is_active_session %}
-                        <span class="badge bg-success">Active</span>
-                    {% else %}
-                        <span class="badge bg-secondary">Inactive</span>
-                    {% endif %}
-                </td>
-                <td>{{ staff.password_changed|yesno:"********,Temporary Password" }}</td>
-                <td class="actions">
-                    <form method="POST" action="{% url 'delete_staff' staff.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="delete">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-
-            {% if not staff_members %}
-            <tr>
-                <td colspan="6" class="text-center">No staff members match your search query.</td>
-            </tr>
-            {% endif %}
-        </tbody>
-    </table>
+    <div class="overflow-x-auto">
+        <table class="table w-full">
+            <thead>
+                <tr>
+                    <th>Profile</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Date Joined</th>
+                    <th>Status</th>
+                    <th>Password</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for staff in staff_members %}
+                <tr>
+                    <td>
+                        <div class="avatar">
+                            <div class="w-10 rounded-full">
+                              <img src="{{ staff.profile_picture.url|default:'/media/profile_pictures/default.jpg' }}"  />
+                            </div>
+                          </div>
+                    </td>
+                    <td>{{ staff.full_name }}</td>
+                    <td>{{ staff.email }}</td>
+                    <td>{{ staff.get_role_display }}</td>
+                    <td>{{ staff.date_joined|date:"F d, Y" }}</td>
+                    <td>
+                        {% if staff.is_active_session %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-error">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ staff.password_changed|yesno:"********,Temporary Password" }}</td>
+                    <td>
+                        <form method="POST" action="{% url 'delete_staff' staff.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-error btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-{% else %}
-    <p class="text-center">Currently have no staff accounts.</p>
-{% endif %}
-
+    {% else %}
+    <p class="text-center text-gray-500">No staff accounts found.</p>
+    {% endif %}
 </div>
 
 {% endif %}
 
 {% if request.session.temp_password_for_user %}
-<div class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full" id="modalOverlay">
+<div id="modalOverlay" class="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 z-50">
     <div class="modal-box">
-        <h2 class="w-full font-medium mb-2 text-lg text-center">Temporary Password</h2>
-        <p>A new staff account has been created with the following credentials:</p>
-        <p class="credential">Username: <strong>{{ request.session.temp_password_for_user.username }}</strong></p>
-        <p class="credential">Temporary Password: <strong>{{ request.session.temp_password_for_user.password }}</strong></p>
-        <p class="text-danger">
-            <strong>Important:</strong> Please instruct the user to change this password immediately upon first login.
-        </p>
-        <a href="#" class="btn btn-primary" onclick="closeModalAndClearSession(event)">Return to Staff List</a>
+        <h2 class="text-xl font-bold mb-2">Temporary Password</h2>
+        <p>Account created with:</p>
+        <p><strong>Username:</strong> {{ request.session.temp_password_for_user.username }}</p>
+        <p><strong>Temporary Password:</strong> {{ request.session.temp_password_for_user.password }}</p>
+        <p class="text-red-500"><strong>Note:</strong> Change password on first login.</p>
+        <button onclick="closeModalAndClearSession(event)" class="btn btn-primary w-full mt-4">Return</button>
     </div>
 </div>
 {% endif %}
 
 <script>
-    // Close Modal Function
     function closeModalAndClearSession(event) {
-        event.preventDefault(); // Prevent immediate navigation
-        const modal = document.getElementById('modalOverlay');
-        modal.style.display = 'none';
-
-        // Clear session data and redirect after successful clearing
+        event.preventDefault();
+        document.getElementById('modalOverlay').style.display = 'none';
         fetch("{% url 'clear_temp_password_session' %}", {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        }).then(response => {
-            if (response.ok) {
-                console.log('Session cleared successfully');
-                window.location.href = "{% url 'staff_list' %}"; // Redirect after clearing
-            } else {
-                console.error('Failed to clear session');
-            }
-        }).catch(error => {
-            console.error('Error:', error);
-        });
+            headers: {'X-CSRFToken': '{{ csrf_token }}'}
+        }).then(() => window.location.href = "{% url 'staff_list' %}");
     }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.getElementById('modalOverlay').style.display = 'flex';
-    });
 </script>
-
 {% endblock %}
-

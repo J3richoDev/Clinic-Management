@@ -47,6 +47,10 @@ INSTALLED_APPS = [
     'widget_tweaks',
 ]
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+
+CRISPY_TEMPLATE_PACK = "tailwind"
+
 LOGIN_REDIRECT_URL = 'my_app/staff-list/'
 LOGIN_URL = 'my_app/staff-login'
 
@@ -130,7 +134,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -140,7 +143,10 @@ AUTH_USER_MODEL = 'my_app.CustomUser'
 
 # settings.py
 
-MEDIA_URL = '/media/'  # URL for accessing media files
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_URL = '/my_app/super-admin/login/'  # Make sure this matches the actual login path

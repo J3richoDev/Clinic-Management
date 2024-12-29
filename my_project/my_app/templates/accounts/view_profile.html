@@ -1,19 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Profile</title>
-</head>
-<body>
-    <h1>Your Profile</h1>
-    <p><strong>Full Name:</strong> {{ user.first_name }} {{ user.middle_name }} {{ user.last_name }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Role:</strong> {{ user.get_role_display }}</p>
-    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" width="100">
-    <br><br>
-    <a href="{% url 'edit_own_profile' %}">Edit Profile</a>
-    <a href="{% url 'nurse_dashboard' %}">Back to Dashboard</a>
-    <a href="{% url 'delete_account' %}" onclick="return confirm('Are you sure you want to delete your account?');">Delete Account</a>
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Profile{% endblock %}
+{% block heading %}Your Profile{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- ✅ Profile Card -->
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6 text-center">
+            <!-- Profile Picture -->
+            <div class="flex justify-center mb-4">
+                <img 
+                    src="{{ user.profile_picture.url|default:'/media/profile_pictures/default.jpg' }}" 
+                    alt="Profile Picture" 
+                    class="w-32 h-32 rounded-full border-4 border-gray-200 object-cover"
+                >
+            </div>
+
+            <!-- Profile Details -->
+            <h1 class="text-2xl font-bold mb-2">{{ user.first_name }} {{ user.middle_name }} {{ user.last_name }}</h1>
+            <p class="text-gray-600 mb-2"><strong>Email:</strong> {{ user.email }}</p>
+            <p class="text-gray-600 mb-4"><strong>Role:</strong> {{ user.get_role_display }}</p>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col md:flex-row gap-3 justify-center mt-4">
+                <a href="{% url 'edit_own_profile' %}" class="btn btn-primary w-full md:w-auto">Edit Profile</a>
+                <a href="{% url 'change_password' %}" class="btn btn-neutral w-full md:w-auto">Change Password</a>
+                <a href="{% url 'delete_account' %}" 
+                   onclick="return confirm('Are you sure you want to delete your account?');" 
+                   class="btn btn-error w-full md:w-auto">
+                   Delete Account
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

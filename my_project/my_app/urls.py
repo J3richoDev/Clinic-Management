@@ -1,11 +1,15 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 from django.contrib.auth.views import LogoutView
 from .views import DashboardStatsAPIView
 
 urlpatterns = [
 
-    path('', views.staff_login, name='staff_login'),
+    path('', views.home, name='home'),
+    path('home/', views.home, name='home'),
+
 
     # Super Admin URLs
     path('super-admin/login/', views.SuperAdminLoginView.as_view(), name='super_admin_login'),
@@ -21,9 +25,7 @@ urlpatterns = [
 
     # Staff Login and Dashboard URLs
     path('staff-login/', views.staff_login, name='staff_login'),
-    path('nurse-dashboard/', views.nurse_dashboard, name='nurse_dashboard'),
-    path('dentist-dashboard/', views.dentist_dashboard, name='dentist_dashboard'),
-    path('physician-dashboard/', views.physician_dashboard, name='physician_dashboard'),
+    path('staff-dashboard/', views.staff_dashboard, name='staff_dashboard'),
 
     # Staff Profile URLs
     path('profile/', views.view_profile, name='view_profile'),
@@ -42,10 +44,7 @@ urlpatterns = [
     path('queue/', views.queue_view, name='queue'),
     path('logout/', LogoutView.as_view(next_page='staff_login'), name='logout'),
 
-    path('nurse/home/', views.nurse_home, name='nurse_home'),
-    path('dentist/home/', views.dentist_home, name='dentist_home'),
-    path('physician/home/', views.physician_home, name='physician_home'),
 
      path('api/dashboard/<str:staff_type>/', DashboardStatsAPIView.as_view(), name='dashboard_api'),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
