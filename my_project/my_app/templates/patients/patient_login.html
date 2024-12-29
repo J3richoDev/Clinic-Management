@@ -1,0 +1,94 @@
+{% extends 'guest.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="grid md:grid-cols-2 grid-cols-1 min-h-screen bg-base-100 rounded-xl">
+    <div class="min-h-full">
+        <div class="hero min-h-full rounded-l-xl bg-sky-400">
+            <div class="hero-content py-12">
+                <div class="max-w-md bg-base-100 px-5 rounded-lg">
+                    <div class="text-center mt-12">
+                        <img src="{% static 'logo/logo.png' %}" alt="Omnia Pic" class="w-60 inline-block">
+                    </div>
+                    <div class="mb-10 text-center">
+                        <h1 class="text-2xl mt-8 font-bold">
+                            Welcome to Bulsu Clinic!
+                        </h1>
+                        <p class="py-2 mt-4">
+                            Take control of your healthcare needs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 gap-4 content-center">
+        <div class="flex flex-col justify-center mb-2">
+            <div class="w-6/12 mx-auto">
+                <h2 class="text-2xl text-center font-semibold">
+                    Patient Login
+                </h2>
+            </div>
+        </div>
+        <div class="w-6/12 mx-auto">
+            <form method="POST" action="{% url 'patient_login' %}">
+                {% csrf_token %}
+                <div class="mb-5">
+                    <label class="font-medium">{{ form.email.label }}</label>
+                    <label class="input input-bordered flex items-center gap-2">
+                        {{ form.email|add_class:"grow"|attr:"placeholder:Email" }}
+                    </label>
+                    {% if form.email.errors %}
+                        <p class="text-sm text-red-500 mt-1">
+                            {{ form.email.errors|striptags }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="mb-5">
+                    <label class="font-medium">{{ form.password.label }}</label>
+                    <label class="input input-bordered flex items-center gap-2">
+                        <div class="relative grow">
+                            {{ form.password|add_class:"grow"|attr:"placeholder:••••••••" }}
+                            <i class="fa fa-eye-slash absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" onclick="toggleVisibility('id_password')"></i>
+                        </div>
+                    </label>
+                    {% if form.password.errors %}
+                        <p class="text-sm text-red-500 mt-1">{{ form.password.errors|striptags }}</p>
+                    {% endif %}
+                </div>
+
+                {% if form.errors %}
+                    <p class="text-sm text-red-500 mt-1">
+                        {{ form.non_field_errors|striptags }}
+                    </p>
+                {% endif %}
+                <div class="text-right text-primary">
+                    <a href="/users/forgot-password/">
+                        <span class="text-sm hover:text-primary hover:underline">Forgot Password?</span>
+                    </a>
+                </div>
+                <button type="submit" class="btn btn-primary mt-5 w-full text-white">
+                    Login
+                </button>
+                <div class="text-center mt-6">
+                    Don't have an account yet?
+                    <a href="/my_app/register" class="hover:text-primary hover:underline">Register</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleVisibility(fieldId) {
+        const input = document.getElementById(fieldId);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
+</script>
+{% endblock %}

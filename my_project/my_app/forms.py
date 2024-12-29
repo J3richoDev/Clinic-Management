@@ -94,3 +94,11 @@ class PatientAccountForm(forms.ModelForm):
 
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Passwords do not match!")
+        
+from django import forms
+from .models import PatientAccount
+
+
+class PatientLoginForm(forms.Form):
+    email = forms.EmailField(label='Email', widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={'class': 'form-control'}))

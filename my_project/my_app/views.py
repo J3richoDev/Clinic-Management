@@ -656,3 +656,47 @@ class PatientRegistrationAPIView(generics.CreateAPIView):
     serializer_class = PatientAccountSerializer
     permission_classes = [AllowAny]
 
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.sessions.models import Session
+from .forms import PatientLoginForm
+from .models import PatientAccount
+from django.contrib.auth import authenticate
+
+
+def patient_login(request):
+    if request.method == 'POST':
+        form = PatientLoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            patient = authenticate(request, email=email, password=password)
+            if patient:
+                # Manually set session for the authenticated patient
+                request.session['patient_id'] = patient.id
+                request.session['patient_email'] = patient.email
+                return redirect('patient_dashboard')
+            else:
+                messages.error(request, 'Invalid email or password.')
+    else:
+        form = PatientLoginForm()
+    
+    return render(request, 'patients/patient_login.html', {'form': form})
+
+
+def patient_dashboard(request):
+    """
+    Patient Dashboard View
+    """
+    if not request.session.get('patient_id'):
+        return redirect('patient_login')
+
+    patient_id = request.session.get('patient_id')
+    try:
+        patient = PatientAccount.objects.get(id=patient_id)
+    except PatientAccount.DoesNotExist:
+        messages.error(request, 'Session expired. Please log in again.')
+        return redirect('patient_login')
+    
+    return render(request, 'patients/patient_dashboard.html', {'patient': patient})

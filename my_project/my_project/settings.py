@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # Adds `request.user`
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+     'my_app.middleware.PatientAuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = 'my_project.urls'
@@ -113,6 +114,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend first
     'my_app.authentication.StaffAuthenticationBackend',  # Custom backend second
+    'my_app.patientauthentication.PatientAccountBackend',
 ]
 
 # Internationalization
