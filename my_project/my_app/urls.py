@@ -39,6 +39,7 @@ urlpatterns = [
     path('patients/', views.patient_list, name='patient_list'),
     path('patients/<int:patient_id>/', views.patient_detail, name='patient_detail'),
     path('patients/<int:patient_id>/add-record/', views.add_medical_record, name='add_medical_record'),
+    path('medical-record/<int:record_id>/', views.medical_record_detail, name='medical_record_detail'),
 
     path('add-patient/', views.add_patient, name='add_patient'),
     path('queue/', views.queue_view, name='queue'),
@@ -46,7 +47,7 @@ urlpatterns = [
     path('queue/display/', views.queue_display, name='queue_display'),
 
 
-    path('logout/', LogoutView.as_view(next_page='staff_login'), name='logout'),
+    path('logout/', LogoutView.as_view(next_page='home'), name='logout'),
 
 
     path('api/dashboard/<str:staff_type>/', DashboardStatsAPIView.as_view(), name='dashboard_api'),

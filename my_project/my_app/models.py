@@ -3,6 +3,10 @@ from django.db import models
 from django.conf import settings  # Import settings for AUTH_USER_MODEL
 from django.db.models import Count
 from django.utils import timezone
+from django.db import models
+
+from django.db import models
+from django.contrib.auth.hashers import make_password
 
 class CustomUserManager(BaseUserManager):
     """
@@ -110,65 +114,6 @@ class CustomUser(AbstractUser):
 
         super().save(*args, **kwargs)
 
-
-class Patient(models.Model):
-    STUDENT = 'Student'
-    FACULTY = 'Faculty'
-    NON_ACADEMIC = 'Non-academic'
-
-    ROLE_CHOICES = [
-        (STUDENT, 'Student'),
-        (FACULTY, 'Faculty'),
-        (NON_ACADEMIC, 'Non-academic'),
-    ]
-
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    date_of_birth = models.DateField()
-    contact_number = models.CharField(max_length=15, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.first_name} {self.last_name}"
-
-class MedicalRecord(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="medical_records")
-    transaction_type = models.CharField(max_length=100)
-    date_time = models.DateTimeField(auto_now_add=True)
-    attending_staff = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)  # Use AUTH_USER_MODEL
-    details = models.TextField()
-
-    # Fields for consultations
-    height = models.FloatField(blank=True, null=True)  # In cm
-    weight = models.FloatField(blank=True, null=True)  # In kg
-    heart_rate = models.IntegerField(blank=True, null=True)  # HR
-    respiratory_rate = models.IntegerField(blank=True, null=True)  # RR
-    temperature = models.FloatField(blank=True, null=True)  # Temp in Celsius
-    blood_pressure = models.CharField(max_length=20, blank=True, null=True)  # e.g., "120/80"
-    pain_scale = models.IntegerField(blank=True, null=True)  # Scale from 0 to 10
-    other_signs = models.TextField(blank=True, null=True)
-    initial_diagnosis = models.CharField(max_length=255, blank=True, null=True)
-
-    def __str__(self):
-        return f"Record for {self.patient} - {self.transaction_type}"
-    
-    @property
-    def is_active_session(self):
-        active_sessions = session.objects.filter(expire_date__gte=timezone.now())
-        for session in active_sessions:
-            data = session.get_decoded()
-            if str(self.id) == str(data.get('_auth_user_id')):
-                return True
-        return False
-    
-
-
-
-from django.db import models
-
-from django.db import models
-from django.contrib.auth.hashers import make_password
-
 class PatientAccount(models.Model):
     STUDENT = 'Student'
     FACULTY = 'Faculty'
@@ -211,3 +156,39 @@ class PatientAccount(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class MedicalRecord(models.Model):
+    patient = models.ForeignKey(PatientAccount, on_delete=models.CASCADE, related_name="medical_records")
+    transaction_type = models.CharField(max_length=100)
+    date_time = models.DateTimeField(auto_now_add=True)
+    attending_staff = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)  # Use AUTH_USER_MODEL
+    details = models.TextField()
+
+    # Fields for consultations
+    height = models.FloatField(blank=True, null=True)  # In cm
+    weight = models.FloatField(blank=True, null=True)  # In kg
+    heart_rate = models.IntegerField(blank=True, null=True)  # HR
+    respiratory_rate = models.IntegerField(blank=True, null=True)  # RR
+    temperature = models.FloatField(blank=True, null=True)  # Temp in Celsius
+    blood_pressure = models.CharField(max_length=20, blank=True, null=True)  # e.g., "120/80"
+    pain_scale = models.IntegerField(blank=True, null=True)  # Scale from 0 to 10
+    other_signs = models.TextField(blank=True, null=True)
+    initial_diagnosis = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"Record for {self.patient} - {self.transaction_type}"
+    
+    @property
+    def is_active_session(self):
+        active_sessions = session.objects.filter(expire_date__gte=timezone.now())
+        for session in active_sessions:
+            data = session.get_decoded()
+            if str(self.id) == str(data.get('_auth_user_id')):
+                return True
+        return False
+    
+
+
+
+

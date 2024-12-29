@@ -304,14 +304,21 @@ def proceed_next_patient(request):
 
 def patient_list(request):
     query = request.GET.get('q')
+    role = request.GET.get('role')
+    
+    patients = PatientAccount.objects.all()
+
     if query:
-        patients = PatientAccount.objects.filter(
+        patients = patients.filter(
             first_name__icontains=query
-        ) | PatientAccount.objects.filter(
+        ) | patients.filter(
             last_name__icontains=query
+        ) | patients.filter(
+            middle_name__icontains=query
         )
-    else:
-        patients = PatientAccount.objects.all()
+
+    if role:
+        patients = patients.filter(role=role)
 
     return render(request, 'staff/patient_list.html', {'patients': patients})
 
@@ -340,6 +347,14 @@ def patient_detail(request, patient_id):
     return render(request, 'staff/patient_detail.html', {
         'patient': patient,
         'medical_records': medical_records
+    })
+    
+def medical_record_detail(request, record_id):
+    # Retrieve the medical record by its ID or return a 404 if not found
+    record = get_object_or_404(MedicalRecord, id=record_id)
+    
+    return render(request, 'staff/medical_record_detail.html', {
+        'record': record
     })
 
 def add_patient(request):
@@ -533,17 +548,15 @@ def patient_login(request):
 
 
 def patient_dashboard(request):
-    """
-    Patient Dashboard View
-    """
     if not request.session.get('patient_id'):
         return redirect('patient_login')
 
     patient_id = request.session.get('patient_id')
     try:
         patient = PatientAccount.objects.get(id=patient_id)
+        medical_records = MedicalRecord.objects.filter(patient=patient).order_by('-date_time')
     except PatientAccount.DoesNotExist:
         messages.error(request, 'Session expired. Please log in again.')
         return redirect('patient_login')
     
-    return render(request, 'patients/patient_dashboard.html', {'patient': patient})
+    return render(request, 'patients/patient_dashboard.html', {'patient': patient, 'medical_records': medical_records})
