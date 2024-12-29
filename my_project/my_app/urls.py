@@ -49,8 +49,8 @@ urlpatterns = [
 
      path('api/dashboard/<str:staff_type>/', DashboardStatsAPIView.as_view(), name='dashboard_api'),
     path('api/register/', PatientRegistrationAPIView.as_view(), name='patient-register'),
-     path('/register/', views.patient_registration, name='patient_register'),
-     path('login/', views.patient_login, name='patient_login'),
-    path('dashboard/', views.patient_dashboard, name='patient_dashboard'),
+     path('patient/register/', views.patient_registration, name='patient_register'),
+     path('patient/login/', views.patient_login, name='patient_login'),
+    path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
 ]
 

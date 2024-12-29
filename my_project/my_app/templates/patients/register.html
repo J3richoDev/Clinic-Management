@@ -103,6 +103,11 @@
 
             <!-- Next Button -->
             <button type="button" class="btn btn-primary w-full mt-6 text-white" onclick="showPage2()">Next →</button>
+            <div class="text-center mt-6">
+                Already have an account?
+                <a href="/my_app/patient/login" class="hover:text-primary hover:underline">Login here</a>
+            </div>
+            
         </form>
     </div>
 </div>
@@ -360,7 +365,7 @@ async function registerPatient() {
 
         if (response.ok) {
             alert('Registration Successful!');
-            window.location.href = '/login/';
+            window.location.href = `${window.location.origin}/my_app/patient/login`;
         } else {
             const errorData = await response.json();
             console.error('Error:', errorData);
