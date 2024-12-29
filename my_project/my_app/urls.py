@@ -34,7 +34,6 @@ urlpatterns = [
     path('profile/change-password/', views.change_password, name='change_password'),
     path('profile/delete/', views.delete_account, name='delete_account'),
 
-    #path('proceed/<int:ticket_id>/', views.proceed_next_patient, name='proceed_next_patient'),
     path('proceed/<int:ticket_id>/', views.proceed_next_patient, name='proceed_next_patient'),
     
     path('patients/', views.patient_list, name='patient_list'),
@@ -43,6 +42,10 @@ urlpatterns = [
 
     path('add-patient/', views.add_patient, name='add_patient'),
     path('queue/', views.queue_view, name='queue'),
+    path('queue/next/', views.next_patient, name='next_patient'),
+    path('queue/display/', views.queue_display, name='queue_display'),
+
+
     path('logout/', LogoutView.as_view(next_page='staff_login'), name='logout'),
 
 

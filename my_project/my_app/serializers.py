@@ -1,12 +1,5 @@
 from rest_framework import serializers
-from .models import Patient
-
-class PatientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Patient
-        fields = '__all__'
-
-from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from .models import PatientAccount
 from django.contrib.auth.hashers import make_password
 
@@ -22,9 +15,35 @@ class PatientAccountSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-        Hash the password if provided.
+        Update the existing patient record if matching details are found.
+        Otherwise, create a new patient record.
         """
+        # Extract provided details
+        first_name = validated_data.get('first_name')
+        last_name = validated_data.get('last_name')
+        age = validated_data.get('age')
+        sex = validated_data.get('sex')
         password = validated_data.pop('password', None)
+
+        # Search for matching patient details
+        matching_patient = PatientAccount.objects.filter(
+            first_name=first_name,
+            last_name=last_name,
+            age=age,
+            sex=sex
+        ).first()
+
+        if matching_patient:
+            # Update the existing patient's details
+            for key, value in validated_data.items():
+                setattr(matching_patient, key, value)
+            if password:
+                matching_patient.password = make_password(password)
+            matching_patient.save()
+            return matching_patient
+
+        # Create a new patient record if no match is found
         if password:
             validated_data['password'] = make_password(password)
+
         return super().create(validated_data)

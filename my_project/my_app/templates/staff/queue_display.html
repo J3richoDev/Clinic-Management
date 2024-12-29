@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="winter">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body style="font-family: 'Poppins', sans-serif;">
+    <h1 class="font-bold text-4xl text-center">Queue Display</h1>
+    <div class="p-5">
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            {% for ticket in tickets|slice:":2" %}
+                <div class="card bg-white shadow-md rounded-md border {% if ticket.label == 'Being Served' %}border-red-500{% elif ticket.label == 'Next' %}border-yellow-500{% else %}border-gray-300{% endif %}">
+                    <div class="card-body flex justify-between items-center">
+                        <div class="text-center">
+                            <h2 class="text-5xl font-semibold">{{ ticket.queue_number }}</h2>
+                        </div>
+                        <div>
+                            {% if ticket.label == "Being Served" %}
+                                <span class="badge badge-error text-white px-3 py-1 rounded-md">Being Served</span>
+                            {% elif ticket.label == "Next" %}
+                                <span class="badge badge-warning px-3 py-1 rounded-md">Next</span>
+                            {% else %}
+                                <span class="badge badge-neutral px-3 py-1 rounded-md">In Queue</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="grid grid-cols-4 gap-4 mb-4">
+            {% for ticket in tickets|slice:"2:" %}
+                <div class="card bg-white shadow-md rounded-md border {% if ticket.label == 'Being Served' %}border-red-500{% elif ticket.label == 'Next' %}border-yellow-500{% else %}border-gray-300{% endif %}">
+                    <div class="card-body flex justify-between items-center">
+                        <div class="text-center">
+                            <h2 class="text-4xl font-semibold">{{ ticket.queue_number }}</h2>
+                            <p class="text-gray-500 text-sm">{{ ticket.truncated_details }}</p>
+                        </div>
+                        <div>
+                            {% if ticket.label == "Being Served" %}
+                                <span class="badge badge-error text-white px-3 py-1 rounded-md">Being Served</span>
+                            {% elif ticket.label == "Next" %}
+                                <span class="badge badge-warning px-3 py-1 rounded-md">Next</span>
+                            {% else %}
+                                <span class="badge badge-neutral px-3 py-1 rounded-md">In Queue</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        setInterval(() => {
+            location.reload();
+        }, 10000); // Refresh every 10 seconds
+    </script>
+
+</body>
+</html>

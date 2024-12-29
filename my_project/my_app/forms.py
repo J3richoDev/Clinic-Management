@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import CustomUser
-from .models import Patient, MedicalRecord
+from .models import PatientAccount, MedicalRecord
 
 class ProfilePictureForm(forms.ModelForm):
     class Meta:
@@ -47,9 +47,10 @@ class CustomPasswordChangeForm(PasswordChangeForm):
     )
 
 class PatientForm(forms.ModelForm):
+    date_of_birth = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
-        model = Patient
-        fields = ['first_name', 'last_name', 'role', 'date_of_birth', 'contact_number']
+        model = PatientAccount
+        fields = ['first_name', 'middle_name', 'last_name', 'sex', 'role', 'date_of_birth', 'age', 'contact_number']
 
 class MedicalRecordForm(forms.ModelForm):
     class Meta:

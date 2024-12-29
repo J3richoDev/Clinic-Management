@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django.contrib.auth.models import User
 from django.conf import settings  # Import settings for AUTH_USER_MODEL
 from django.db.models import Count
 from django.utils import timezone
@@ -199,6 +198,8 @@ class PatientAccount(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STUDENT)
     password = models.CharField(max_length=128, blank=True, null=True)  # Nullable and blank allowed
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)  # Link to User model
+
 
     def save(self, *args, **kwargs):
         """

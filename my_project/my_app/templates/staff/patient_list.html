@@ -10,10 +10,10 @@
 
 {% if not request.user.is_superuser %}
 
-<!-- 
+
 <form method="get">
-    <a href="{% url 'add_patient' %}">Add Patient</a>
-</form> -->
+    <a class="btn btn-primary" href="{% url 'add_patient' %}">Add Patient</a>
+</form>
 
 
 <div class="card w-full p-6 bg-base-100 shadow-xl mt-2 max-h-[600px] overflow-y-auto min-h-[300px]">
@@ -48,6 +48,14 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-2">{{ patient.first_name }}</td>
                         <td class="px-4 py-2">{{ patient.last_name }}</td>
+                        <td class="px-4 py-2">{{ patient.sex }}</td>
+                        <td class="px-4 py-2">{{ patient.age }}</td>
+                        <td class="px-4 py-2">
+                            <a href="{% url 'patient_detail' patient.id %}">View</a>
+                        </td>
+                        <td class="px-4 py-2">
+                            <a href="{% url 'add_medical_record' patient.id %}">Add Medical Record</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
