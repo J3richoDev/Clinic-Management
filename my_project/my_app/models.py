@@ -194,7 +194,7 @@ class PatientAccount(models.Model):
     emergency_contact = models.CharField(max_length=50)
     relation = models.CharField(max_length=50)
     contact_number = models.CharField(max_length=15)
-    blood_type = models.CharField(max_length=5, blank=True, null=True)
+    blood_type = models.CharField(max_length=20, blank=True, null=True)
     allergies = models.TextField(blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=STUDENT)
     password = models.CharField(max_length=128, blank=True, null=True)  # Nullable and blank allowed
