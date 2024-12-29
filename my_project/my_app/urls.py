@@ -4,6 +4,7 @@ from django.conf.urls.static import static
 from . import views
 from django.contrib.auth.views import LogoutView
 from .views import DashboardStatsAPIView
+from .views import PatientRegistrationAPIView
 
 urlpatterns = [
 
@@ -45,6 +46,11 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page='staff_login'), name='logout'),
 
 
-     path('api/dashboard/<str:staff_type>/', DashboardStatsAPIView.as_view(), name='dashboard_api'),
+    path('api/dashboard/<str:staff_type>/', DashboardStatsAPIView.as_view(), name='dashboard_api'),
+    path('api/register/', PatientRegistrationAPIView.as_view(), name='patient-register'),
+    path('patient/register/', views.patient_registration, name='patient_register'),
+    path('patient/login/', views.patient_login, name='patient_login'),
+    path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

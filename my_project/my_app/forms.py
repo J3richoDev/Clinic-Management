@@ -59,3 +59,46 @@ class MedicalRecordForm(forms.ModelForm):
             'heart_rate', 'respiratory_rate', 'temperature', 'blood_pressure',
             'pain_scale', 'other_signs', 'initial_diagnosis'
         ]
+
+
+from .models import PatientAccount
+
+class PatientAccountForm(forms.ModelForm):
+    date_of_birth = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    password = forms.CharField(widget=forms.PasswordInput())
+    confirm_password = forms.CharField(widget=forms.PasswordInput(), label="Confirm Password")
+
+    class Meta:
+        model = PatientAccount
+        fields = [
+            'first_name', 'middle_name', 'last_name', 'email', 'address',
+            'age', 'sex', 'campus', 'college', 'course_year',
+            'emergency_contact', 'relation', 'contact_number', 'blood_type',
+            'allergies', 'role'
+        ]
+        widgets = {
+            'sex': forms.Select(choices=[('Male', 'Male'), ('Female', 'Female')]),
+            'role': forms.Select(choices=PatientAccount.ROLE_CHOICES),
+            'blood_type': forms.Select(choices=[
+                ('A+', 'A+'), ('A-', 'A-'),
+                ('B+', 'B+'), ('B-', 'B-'),
+                ('AB+', 'AB+'), ('AB-', 'AB-'),
+                ('O+', 'O+'), ('O-', 'O-')
+            ])
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if password and confirm_password and password != confirm_password:
+            raise forms.ValidationError("Passwords do not match!")
+        
+from django import forms
+from .models import PatientAccount
+
+
+class PatientLoginForm(forms.Form):
+    email = forms.EmailField(label='Email', widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={'class': 'form-control'}))

@@ -470,3 +470,77 @@ class DashboardStatsAPIView(APIView):
             "average_age": avg_age["age__avg"],
         }
         return Response(data)
+    
+
+# views.py
+from django.shortcuts import render, redirect
+from .forms import PatientAccountForm
+from django.contrib import messages
+
+def patient_registration(request):
+    if request.method == 'POST':
+        form = PatientAccountForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Patient account created successfully!')
+            return redirect('patients/register')
+    else:
+        form = PatientAccountForm()
+    
+    return render(request, 'patients/register.html', {'form': form})
+
+from rest_framework import generics
+from .models import PatientAccount
+from .serializers import PatientAccountSerializer
+from rest_framework.permissions import AllowAny
+
+class PatientRegistrationAPIView(generics.CreateAPIView):
+
+    queryset = PatientAccount.objects.all()
+    serializer_class = PatientAccountSerializer
+    permission_classes = [AllowAny]
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.sessions.models import Session
+from .forms import PatientLoginForm
+from .models import PatientAccount
+from django.contrib.auth import authenticate
+
+
+def patient_login(request):
+    if request.method == 'POST':
+        form = PatientLoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            patient = authenticate(request, email=email, password=password)
+            if patient:
+                # Manually set session for the authenticated patient
+                request.session['patient_id'] = patient.id
+                request.session['patient_email'] = patient.email
+                return redirect('patient_dashboard')
+            else:
+                messages.error(request, 'Invalid email or password.')
+    else:
+        form = PatientLoginForm()
+    
+    return render(request, 'patients/patient_login.html', {'form': form})
+
+
+def patient_dashboard(request):
+    """
+    Patient Dashboard View
+    """
+    if not request.session.get('patient_id'):
+        return redirect('patient_login')
+
+    patient_id = request.session.get('patient_id')
+    try:
+        patient = PatientAccount.objects.get(id=patient_id)
+    except PatientAccount.DoesNotExist:
+        messages.error(request, 'Session expired. Please log in again.')
+        return redirect('patient_login')
+    
+    return render(request, 'patients/patient_dashboard.html', {'patient': patient})

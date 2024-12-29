@@ -1,0 +1,18 @@
+
+{% extends 'guest.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks%}
+
+{% block title %}Patients{% endblock %}
+{% block heading %} Patients{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-10">
+    <h1 class="text-2xl font-bold mb-5">Welcome, {{ patient.first_name }} {{ patient.last_name }}</h1>
+    <p>Email: {{ patient.email }}</p>
+    <p>Role: {{ patient.role }}</p>
+    <p>Created At: {{ patient.created_at }}</p>
+</div>
+{% endblock %}
+

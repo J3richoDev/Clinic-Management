@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',  # Adds `request.user`
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+     'my_app.middleware.PatientAuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = 'my_project.urls'
@@ -117,6 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend first
     'my_app.authentication.StaffAuthenticationBackend',  # Custom backend second
+    'my_app.patientauthentication.PatientAccountBackend',
 ]
 
 # Internationalization
@@ -130,13 +132,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'my_app.CustomUser'
