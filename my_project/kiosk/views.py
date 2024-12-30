@@ -30,6 +30,8 @@ def ticket_creation(request, ticket_type):
                 ticket.transaction_group = 'DENTIST'
             elif ticket.transaction_type == 'MEDICAL':
                 ticket.transaction_group = 'PHYSICIAN'
+            else:
+                ticket.transaction_group = 'NURSE'
 
             ticket.save()
             return render(request, 'ticket_success.html', {
