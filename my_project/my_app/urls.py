@@ -34,6 +34,11 @@ urlpatterns = [
     path('profile/edit/', views.edit_own_profile, name='edit_own_profile'),
     path('profile/change-password/', views.change_password, name='change_password'),
     path('profile/delete/', views.delete_account, name='delete_account'),
+    
+    # Patient Profile URLs
+    path('patient-profile/', views.patient_view_profile, name='patient_view_profile'),
+    path('patient-profile/edit/', views.patient_edit_own_profile, name='patient_edit_own_profile'),
+    path('patient-profile/change-password/', views.patient_change_password, name='patient_change_password'),
 
     path('proceed/<int:ticket_id>/', views.proceed_next_patient, name='proceed_next_patient'),
     

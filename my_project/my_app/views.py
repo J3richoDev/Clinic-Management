@@ -19,6 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .forms import PatientAccountForm
 
 
+
 def home(request):
     return render(request, 'home.html')
 
@@ -29,6 +30,19 @@ def is_super_admin(user):
 class SuperAdminLoginView(LoginView):
     template_name = 'admin/super_admin_login.html'
     
+    def form_valid(self, form):
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+
+        # Authenticate using the custom backend
+        user = authenticate(self.request, username=username, password=password)
+        if user is not None and user.is_superuser:
+            login(self.request, user)
+            return redirect('staff_list')
+        else:
+            form.add_error(None, "Invalid credentials or unauthorized access.")
+            return self.form_invalid(form)
+
     def form_invalid(self, form):
         messages.error(self.request, "Invalid credentials. Please try again.")
         return super().form_invalid(form)
@@ -83,9 +97,9 @@ def staff_list(request):
 @user_passes_test(is_super_admin)
 def add_staff(request):
     if request.method == "POST":
-        first_name = request.POST.get("first_name").strip()
+        first_name = request.POST.get("first_name", "").strip()
         middle_name = request.POST.get("middle_name", "").strip()
-        last_name = request.POST.get("last_name").strip()
+        last_name = request.POST.get("last_name", "").strip()
         role = request.POST.get("role")
         username = request.POST.get("username", "").strip()
 
@@ -96,16 +110,27 @@ def add_staff(request):
         try:
             temp_password = get_random_string(12)
             middle_initials = ''.join([word[0].lower() for word in middle_name.split() if word])
-            email = (
+
+            # Base Email Template
+            base_email = (
                 f"{first_name.lower().replace(' ', '')}."
                 f"{last_name.lower().replace(' ', '')}."
                 f"{middle_initials}@buslu.edu.ph"
             ).strip(".")
 
+            email = base_email
+            counter = 1
+
+            # Check if the email already exists, increment if needed
+            while CustomUser.objects.filter(email=email).exists():
+                email = f"{base_email.split('@')[0]}{counter}@{base_email.split('@')[1]}"
+                counter += 1
+
+            # Set username if not provided
             username = username if username else email
 
             staff = CustomUser.objects.create_user(
-                username=username or email,
+                username=username,
                 password=temp_password,
                 email=email,
                 first_name=first_name,
@@ -121,7 +146,7 @@ def add_staff(request):
                 'password': temp_password
             }
 
-            messages.success(request, f"Staff account for {staff.full_name} created successfully.")
+            messages.success(request, f"Staff account for {staff.full_name} created successfully with email {email}.")
             return redirect('staff_list')
 
         except Exception as e:
@@ -166,16 +191,28 @@ def delete_staff(request, staff_id):
 def staff_login(request):
     errors = {}
     if request.method == "POST":
-        username = request.POST.get("username")
+        identifier = request.POST.get("username")  # Can be username or email
         password = request.POST.get("password")
 
-        if not username:
-            errors['username'] = "Username is required."
+        # Validation for empty fields
+        if not identifier:
+            errors['username'] = "Username or Email is required."
         if not password:
             errors['password'] = "Password is required."
 
         if not errors:
-            user = authenticate(request, username=username, password=password)
+            # Check if the identifier is an email
+            user = None
+            if "@" in identifier:
+                try:
+                    user_obj = CustomUser.objects.get(email=identifier)
+                    user = authenticate(request, username=user_obj.username, password=password)
+                except CustomUser.DoesNotExist:
+                    errors['general'] = "Invalid email or password."
+            else:
+                # Assume it's a username
+                user = authenticate(request, username=identifier, password=password)
+
             if user and not user.is_superuser:
                 login(request, user)
                 request.session['user_role'] = user.role
@@ -282,6 +319,42 @@ def change_password(request):
         form = CustomPasswordChangeForm(user=request.user)
 
     return render(request, 'accounts/change_password.html', {'form': form})
+
+@login_required
+def patient_view_profile(request):
+    return render(request, 'patients/view_acc.html', {'user': request.user})
+
+@login_required
+def patient_edit_own_profile(request):
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your profile has been updated successfully.")
+            return redirect('patient_view_profile')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = ProfileForm(instance=request.user)
+
+    return render(request, 'patients/edit_acc.html', {'form': form})
+
+@login_required
+def patient_change_password(request):
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            update_session_auth_hash(request, request.user)  # Keep the user logged in
+            messages.success(request, "Your password has been updated successfully.")
+            return redirect('patient_view_profile')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = CustomPasswordChangeForm(user=request.user)
+
+    return render(request, 'patients/change_pw.html', {'form': form})
+
 
 @login_required
 def delete_account(request):
