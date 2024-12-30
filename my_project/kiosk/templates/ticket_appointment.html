@@ -5,16 +5,15 @@
 {% block content %}
 
 
-<div class="container mx-auto px-4 py-6">
+<div class="flex justify-center items-center min-h-screen bg-sky-400">
 
+    <div class="container mx-auto px-4 py-6 max-w-lg ">
 
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <!-- ✅ Appointment Section -->
         <div class="card bg-white shadow-md rounded-md">
             <div class="card-body">
-                <h2 class="text-xl font-bold mb-4">📅 Appointments</h2>
+                <h2 class="text-xl font-bold mb-4 flex justify-center items-center">📅 Book Appointment</h2>
                 <form id="appointmentForm" action="" class="space-y-4">
                     {% csrf_token %}
                     <div>
@@ -63,11 +62,18 @@
                         <label for="appointment_time" class="block text-gray-700 font-medium mb-1">Select Time</label>
                         <input type="time" id="appointment_time" name="appointment_time" class="input input-bordered w-full" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-full">Book Appointment</button>
+                    <div class="flex flex-col md:flex-row gap-2  ">
+                        <button type="button" onclick="window.history.back()" class="btn btn-secondary w-full md:w-1/2">
+                            Back
+                        </button>
+                        <button type="submit" class="btn btn-primary w-full md:w-1/2">
+                            📅 Book Appointment
+                        </button>
+                    </div>
                 </form>
             </div>
-        </div>
     </div>
+</div>
 </div>
 
 <script>
