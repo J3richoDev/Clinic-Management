@@ -144,8 +144,12 @@ class PatientAccount(models.Model):
     password = models.CharField(max_length=128, blank=True, null=True)  # Nullable and blank allowed
     created_at = models.DateTimeField(auto_now_add=True)
     date_of_birth = models.DateField(blank=True, null=True)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)  # Link to User model
-
+    profile_picture = models.ImageField(
+            upload_to='profile_pictures/',
+            default='profile_pictures/default.png',
+            null=True,
+            blank=True
+        )
 
     def save(self, *args, **kwargs):
         """

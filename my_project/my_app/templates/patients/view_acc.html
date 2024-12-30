@@ -1,10 +1,17 @@
-{% extends 'base.html' %}
+{% extends 'guest.html' %}
 {% load static %}
 
 {% block title %}Your Profile{% endblock %}
 {% block heading %}Your Profile{% endblock %}
 
 {% block content %}
+<div class="relative w-full">
+    <a href="{% url 'patient_dashboard' %}" 
+       class="btn btn-primary absolute left-0 top-4 ml-4">
+        ← Back
+    </a>
+  </div>
+
 <div class="container mx-auto px-4 py-6">
     <!-- ✅ Profile Card -->
     <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
@@ -25,8 +32,8 @@
 
             <!-- Action Buttons -->
             <div class="flex flex-col md:flex-row gap-3 justify-center mt-4">
-                <a href="{% url 'edit_own_profile' %}" class="btn btn-primary w-full md:w-auto">Edit Profile</a>
-                <a href="{% url 'change_password' %}" class="btn btn-neutral w-full md:w-auto">Change Password</a>
+                <a href="{% url 'patient_edit_own_profile' %}" class="btn btn-primary w-full md:w-auto">Edit Profile</a>
+                <a href="{% url 'patient_change_password' %}" class="btn btn-neutral w-full md:w-auto">Change Password</a>
                 <button onclick="delete_account_modal.showModal()"
                    class="btn btn-error w-full md:w-auto">
                    Delete Account

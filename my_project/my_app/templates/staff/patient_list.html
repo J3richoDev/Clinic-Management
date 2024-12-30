@@ -41,6 +41,7 @@
                     <th class="px-4 py-2 text-left">Middle Name</th>
                     <th class="px-4 py-2 text-left">Sex</th>
                     <th class="px-4 py-2 text-left">Age</th>
+                    <th class="px-4 py-2 text-left">Role</th>
                     <th class="px-4 py-2 text-left"></th>
                 </tr>
             </thead>
@@ -52,6 +53,7 @@
                     <td class="px-4 py-2">{{ patient.middle_name }}</td>
                     <td class="px-4 py-2">{{ patient.sex }}</td>
                     <td class="px-4 py-2">{{ patient.age }}</td>
+                    <td class="px-4 py-2">{{ patient.role }}</td>
                     <td class="px-4 py-2">
                         <div class="flex justify-end gap-4">
                             <a class="btn btn-secondary btn-sm" href="{% url 'patient_detail' patient.id %}">View</a>

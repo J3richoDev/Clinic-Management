@@ -4,6 +4,14 @@
 {% load widget_tweaks %}
 
 {% block content %}
+
+<div class="relative w-full">
+  <a href="{% url 'home' %}" 
+     class="btn btn-primary absolute left-0 top-4 ml-4">
+      ← Back
+  </a>
+</div>
+
     <div class="grid md:grid-cols-2 grid-cols-1 min-h-screen bg-base-100 rounded-xl">
       
       <div class="grid grid-cols-1 gap-4 content-center">
@@ -18,7 +26,7 @@
           <form method="POST">
             {% csrf_token %}
             <div class="mb-5">
-              <label class="font-medium">{{ form.username.label}}</label>
+              <label class="font-medium">Username or Email</label>
                 <label class="input input-bordered flex items-center gap-2" for="username">
                   {{ form.username|add_class:"grow"|attr:"placeholder:Email or Username" }}
                   </label>

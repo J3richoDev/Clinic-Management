@@ -119,6 +119,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend first
     'my_app.authentication.StaffAuthenticationBackend',  # Custom backend second
     'my_app.patientauthentication.PatientAccountBackend',
+    'my_app.authentication.UsernameOrEmailBackend',
 ]
 
 # Internationalization
