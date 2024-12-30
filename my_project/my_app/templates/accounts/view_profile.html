@@ -27,8 +27,7 @@
             <div class="flex flex-col md:flex-row gap-3 justify-center mt-4">
                 <a href="{% url 'edit_own_profile' %}" class="btn btn-primary w-full md:w-auto">Edit Profile</a>
                 <a href="{% url 'change_password' %}" class="btn btn-neutral w-full md:w-auto">Change Password</a>
-                <a href="{% url 'delete_account' %}" 
-                   onclick="return confirm('Are you sure you want to delete your account?');" 
+                <button onclick="delete_account_modal.showModal()"
                    class="btn btn-error w-full md:w-auto">
                    Delete Account
                 </a>
@@ -36,4 +35,24 @@
         </div>
     </div>
 </div>
+
+<dialog id="delete_account_modal" class="modal">
+    <div class="modal-box">
+
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+
+        <h3 class="text-lg font-bold">Delete Account</h3>
+        <p class="py-4">Are you sure you want to delete your account?</p>
+
+        <div class="modal-action">
+            <button class="btn" onclick="delete_account_modal.close()">Cancel</button>
+            <form method="post" action="{% url 'delete_account' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-error">Delete</button>
+            </form>
+        </div>
+    </div>
+</dialog>
 {% endblock %}

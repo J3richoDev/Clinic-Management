@@ -28,6 +28,10 @@ def is_super_admin(user):
 
 class SuperAdminLoginView(LoginView):
     template_name = 'admin/super_admin_login.html'
+    
+    def form_invalid(self, form):
+        messages.error(self.request, "Invalid credentials. Please try again.")
+        return super().form_invalid(form)
 
 # Super Admin Views
 def super_admin_login(request):
@@ -160,21 +164,26 @@ def delete_staff(request, staff_id):
 
 # Staff Views
 def staff_login(request):
+    errors = {}
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        user = authenticate(request, username=username, password=password)
+        if not username:
+            errors['username'] = "Username is required."
+        if not password:
+            errors['password'] = "Password is required."
 
-        if user and not user.is_superuser:
-            login(request, user)
-            request.session['user_role'] = user.role
-            return redirect('staff_dashboard')
-        else:
-            messages.error(request, "Invalid credentials or unauthorized access.")
-            return redirect('staff_login')
+        if not errors:
+            user = authenticate(request, username=username, password=password)
+            if user and not user.is_superuser:
+                login(request, user)
+                request.session['user_role'] = user.role
+                return redirect('staff_dashboard')
+            else:
+                errors['general'] = "Invalid credentials or unauthorized access."
 
-    return render(request, 'staff/staff_login.html')
+    return render(request, 'staff/staff_login.html', {'errors': errors})
 
 from django.db.models import Count
 
@@ -188,13 +197,13 @@ def staff_dashboard(request):
     # Metrics
     total_patients_today = MedicalRecord.objects.filter(attending_staff=user, date_time__date=today).count()
     pending_appointments = Ticket.objects.filter(transaction_group=user.role.upper(), scheduled_time__date=today, checked_in=False).count()
-    current_queue_status = Ticket.objects.filter(transaction_group=user.role.upper(), checked_in=False).count()
+    current_queue_status = Ticket.objects.filter(transaction_group=user.role.upper(), scheduled_time__date=today, checked_in=False).count()
 
     # **4. Average Consultation Duration (Using Raw SQL Query for SQLite)**
     consultation_duration = (
         Ticket.objects.filter(checked_in_time__isnull=False)  # Only include tickets with valid checked_in_time
         .annotate(queue_time=ExpressionWrapper(
-            F('checked_in_time') - F('transaction_time'),
+            F('checked_in_time') - F('scheduled_time'),
             output_field=DurationField()
         ))
         .aggregate(average_queue_time=Avg('queue_time'))['average_queue_time']
@@ -279,8 +288,7 @@ def delete_account(request):
     if request.method == 'POST':
         request.user.delete()
         messages.success(request, "Your account has been deleted.")
-        return redirect('staff_login')
-    return render(request, 'accounts/delete_account.html')
+    return redirect('home')
 
 
 def proceed_next_patient(request):
@@ -289,7 +297,7 @@ def proceed_next_patient(request):
         checked_in=False
     ).order_by(
         '-special_tag',  # Higher priority first
-        'transaction_time'  # Oldest first
+        'scheduled_time'  # Oldest first
     ).first()
 
     if ticket:
@@ -376,13 +384,16 @@ def queue_view(request):
     else:
         return HttpResponseForbidden("You are not authorized to access this page.")
 
+    current_date = localtime(now()).date()
+
     # Fetch tickets for the user's transaction group
     tickets = Ticket.objects.filter(
         transaction_group=transaction_group,
-        checked_in=False
+        checked_in=False,
+        scheduled_time__date=current_date
     ).order_by(
         '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'transaction_time'  # Oldest first
+        'scheduled_time'  # Oldest first
     )
 
     # Annotate each ticket with a label
@@ -395,7 +406,7 @@ def queue_view(request):
             ticket.label = "In Queue"
 
         # Localize transaction time for display
-        ticket.transaction_time_local = localtime(ticket.transaction_time)
+        ticket.transaction_time_local = localtime(ticket.scheduled_time)
 
         # Optional: Truncate details for "Other" transaction types
         if ticket.transaction_type == "Other" and ticket.details:
@@ -413,13 +424,16 @@ def queue_display(request):
     else:
         return HttpResponseForbidden("You are not authorized to access this page.")
 
+    current_date = localtime(now()).date()
+
     # Fetch tickets for the user's transaction group
     tickets = Ticket.objects.filter(
         transaction_group=transaction_group,
-        checked_in=False
+        checked_in=False,
+        scheduled_time__date=current_date
     ).order_by(
         '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'transaction_time'  # Oldest first
+        'scheduled_time'  # Oldest first
     )
 
     # Annotate each ticket with a label
@@ -432,7 +446,7 @@ def queue_display(request):
             ticket.label = "In Queue"
 
         # Localize transaction time for display
-        ticket.transaction_time_local = localtime(ticket.transaction_time)
+        ticket.transaction_time_local = localtime(ticket.scheduled_time)
 
         # Optional: Truncate details for "Other" transaction types
         if ticket.transaction_type == "Other" and ticket.details:
@@ -478,7 +492,7 @@ def render_staff_home(request, template_name, transaction_group):
     # Real-time statistics
     total_patients = PatientAccount.objects.count()
     today_appointments = Ticket.objects.filter(
-        transaction_time__date=now().date(),
+        scheduled_time__date=now().date(),
         transaction_group=transaction_group
     ).count()
 
@@ -550,15 +564,16 @@ def patient_login(request):
             password = form.cleaned_data['password']
             patient = authenticate(request, email=email, password=password)
             if patient:
-                # Manually set session for the authenticated patient
+                # Set session for the authenticated patient
                 request.session['patient_id'] = patient.id
                 request.session['patient_email'] = patient.email
                 return redirect('patient_dashboard')
             else:
-                messages.error(request, 'Invalid email or password.')
+                # Add non-field error
+                form.add_error(None, "Invalid email or password.")
     else:
         form = PatientLoginForm()
-    
+
     return render(request, 'patients/patient_login.html', {'form': form})
 
 

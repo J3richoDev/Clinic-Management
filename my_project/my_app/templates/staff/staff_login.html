@@ -4,6 +4,13 @@
 {% load widget_tweaks %}
 
 {% block content %}
+<div class="relative w-full">
+  <a href="{% url 'home' %}" 
+     class="btn bg-base-100 absolute left-0 top-4 ml-4">
+      ← Back
+  </a>
+</div>
+
     <div class="grid md:grid-cols-2 grid-cols-1 min-h-screen bg-base-100 rounded-xl">
       <div class="min-h-full">
         <div class="hero min-h-full rounded-l-xl bg-sky-400">
@@ -40,9 +47,9 @@
                 <label class="input input-bordered flex items-center gap-2" for="username">
                   <input type="text" name="username" required>
                   </label>
-                  {% if form.username.errors %}
+                  {% if errors.username %}
                       <p class="text-sm text-red-500 mt-1">
-                          {{ form.username.errors|striptags }}
+                        {{ errors.username }}
                       </p>
                   {% endif %}
             </div>
@@ -56,14 +63,14 @@
                       <i class="fa fa-eye-slash absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" onclick="toggleVisibility('password')"></i>
                   </div>
               </label>
-              {% if form.password.errors %}
-                  <p class="text-sm text-red-500 mt-1">{{ form.password.errors|striptags }}</p>
+              {% if errors.password %}
+                  <p class="text-sm text-red-500 mt-1">{{ errors.password }}</p>
               {% endif %}
           </div>
 
-            {% if form.errors %}
+            {% if errors.general %}
                 <p class="text-sm text-red-500 mt-1">
-                    {{ form.non_field_errors|striptags }}
+                  {{ errors.general }}
                 </p>
             {% endif %}
           <div class="text-right text-primary">
