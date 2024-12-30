@@ -58,7 +58,10 @@
 
     <!-- ✅ Action Buttons -->
     <div class="flex flex-col md:flex-row gap-4 justify-center mt-8">
-        <a href="{% url 'patient_dashboard' %}" class="btn btn-neutral w-full md:w-auto">⬅️ Back to Dashboard</a>
+        <a href="{{ request.META.HTTP_REFERER|default:'{% url "patient_dashboard" %}' }}" 
+           class="btn btn-neutral w-full md:w-auto">
+            ⬅️ Back to Previous Page
+        </a>
     </div>
 </div>
 {% endblock %}

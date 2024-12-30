@@ -16,6 +16,8 @@ def ticket_selection(request):
             return redirect('kiosk:ticket_creation', ticket_type=ticket_type)
     return render(request, 'ticket_selection.html')
 
+from django.utils.timezone import now, localtime
+
 def ticket_creation(request, ticket_type):
     if request.method == 'POST':
         form = TicketForm(request.POST, ticket_type=ticket_type)
@@ -24,7 +26,7 @@ def ticket_creation(request, ticket_type):
             ticket.ticket_type = ticket_type
 
             # Assign transaction group based on transaction type
-            if ticket.transaction_type in ['CERTIFICATE']:
+            if ticket.transaction_type == 'CERTIFICATE':
                 ticket.transaction_group = 'NURSE'
             elif ticket.transaction_type == 'DENTAL':
                 ticket.transaction_group = 'DENTIST'
@@ -32,6 +34,10 @@ def ticket_creation(request, ticket_type):
                 ticket.transaction_group = 'PHYSICIAN'
             else:
                 ticket.transaction_group = 'NURSE'
+
+            # ✅ Set scheduled_time to now() if it's a walk-in appointment
+            if ticket_type.upper() == 'WALKIN':
+                ticket.scheduled_time = now()
 
             ticket.save()
             return render(request, 'ticket_success.html', {

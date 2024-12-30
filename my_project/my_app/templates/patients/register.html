@@ -251,10 +251,16 @@
             displayError('Passwords do not match!', 'errorMessagePage1');
             return;
         }
-
+    
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
             displayError('Please enter a valid email address (e.g., example@domain.com).', 'errorMessagePage1');
+            return;
+        }
+    
+        const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            displayError('Password must be at least 8 characters long, include at least one number, one special character, and one letter.', 'errorMessagePage1');
             return;
         }
     
@@ -263,6 +269,7 @@
         document.getElementById('page1').classList.add('hidden');
         document.getElementById('page2').classList.remove('hidden');
     }
+    
 
     // Navigate Back to Step 1
     function showPage1() {
@@ -352,7 +359,7 @@ async function registerPatient() {
         blood_type: document.getElementById('blood_type').value.trim(),
         allergies: getValue('textarea', page2Form),
         role: getValue('#accountType', page2Form),
-        password: getValue('#password1', page1Form)
+        password: getValue('#password1', page1Form)                     
     };
 
     try {

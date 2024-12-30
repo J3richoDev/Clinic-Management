@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% load widget_tweaks%}
+{% load widget_tweaks %}
 
 {% block title %}Add New Patient{% endblock %}
 {% block heading %}Add New Patient{% endblock %}
@@ -9,17 +9,87 @@
 {% block content %}
 
 <div class="card w-full p-6 bg-base-100 shadow-xl">
-
-    <form method="post">
+    <form method="post" class="grid grid-cols-2 gap-4">
         {% csrf_token %}
-        {{ form|crispy }}
-        <button class="btn btn-primary" type="submit">Save Patient</button>
-    </form>
 
+        <!-- First Name -->
+        <div>
+            <label for="id_first_name" class="block text-sm font-medium text-gray-700">First Name</label>
+            {{ form.first_name|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Middle Name -->
+        <div>
+            <label for="id_middle_name" class="block text-sm font-medium text-gray-700">Middle Name</label>
+            {{ form.middle_name|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Last Name -->
+        <div>
+            <label for="id_last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
+            {{ form.last_name|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Sex -->
+        <div>
+            <label for="id_sex" class="block text-sm font-medium text-gray-700">Sex</label>
+            {{ form.sex|attr:"class:select select-bordered w-full" }}
+        </div>
+
+        <!-- Role -->
+        <div>
+            <label for="id_role" class="block text-sm font-medium text-gray-700">Role</label>
+            {{ form.role|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Date of Birth -->
+        <div>
+            <label for="id_date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+            {{ form.date_of_birth|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Age -->
+        <div>
+            <label for="id_age" class="block text-sm font-medium text-gray-700">Age</label>
+            {{ form.age|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Contact Number -->
+        <div>
+            <label for="id_contact_number" class="block text-sm font-medium text-gray-700">Contact Number</label>
+            {{ form.contact_number|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-span-2 flex justify-end mt-4">
+            <button class="btn btn-primary" type="submit">Save Patient</button>
+        </div>
+    </form>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dobField = document.querySelector('input[name="date_of_birth"]');
+        const ageField = document.querySelector('input[name="age"]');
+
+        dobField.addEventListener('change', function() {
+            const dob = new Date(dobField.value);
+            const today = new Date();
+
+            if (!isNaN(dob)) {
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+
+                ageField.value = age >= 0 ? age : '';
+            } else {
+                ageField.value = '';
+            }
+        });
+    });
+</script>
+
 {% endblock %}
-
-
-
-

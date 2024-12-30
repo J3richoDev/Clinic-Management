@@ -176,31 +176,19 @@ def staff_login(request):
 
     return render(request, 'staff/staff_login.html')
 
+from django.db.models import Count
+
 @login_required
 def staff_dashboard(request):
     user = request.user
     today = timezone.now().date()
-    start_of_week = today - timedelta(days=today.weekday())  # Start of the current week
-    start_of_month = today.replace(day=1)  # Start of the current month
+    start_of_week = today - timedelta(days=today.weekday())
+    start_of_month = today.replace(day=1)
 
-    # **1. Total Patients Attended Today**
-    total_patients_today = MedicalRecord.objects.filter(
-        attending_staff=user,
-        date_time__date=today
-    ).count()
-
-    # **2. Pending Appointments**
-    pending_appointments = Ticket.objects.filter(
-        transaction_group=user.role.upper(),
-        scheduled_time__date=today,
-        checked_in=False
-    ).count()
-
-    # **3. Current Queue Status**
-    current_queue_status = Ticket.objects.filter(
-        transaction_group=user.role.upper(),
-        checked_in=False
-    ).count()
+    # Metrics
+    total_patients_today = MedicalRecord.objects.filter(attending_staff=user, date_time__date=today).count()
+    pending_appointments = Ticket.objects.filter(transaction_group=user.role.upper(), scheduled_time__date=today, checked_in=False).count()
+    current_queue_status = Ticket.objects.filter(transaction_group=user.role.upper(), checked_in=False).count()
 
     # **4. Average Consultation Duration (Using Raw SQL Query for SQLite)**
     consultation_duration = (
@@ -225,26 +213,25 @@ def staff_dashboard(request):
         else:
             average_consultation_duration = f"{minutes} min"
 
-    # **5. Monthly/Weekly Performance Metrics**
-    weekly_patients = MedicalRecord.objects.filter(
-        attending_staff=user,
-        date_time__date__gte=start_of_week
-    ).count()
+    weekly_patients = MedicalRecord.objects.filter(attending_staff=user, date_time__date__gte=start_of_week).count()
+    monthly_patients = MedicalRecord.objects.filter(attending_staff=user, date_time__date__gte=start_of_month).count()
 
-    monthly_patients = MedicalRecord.objects.filter(
-        attending_staff=user,
-        date_time__date__gte=start_of_month
-    ).count()
+    recent_records = MedicalRecord.objects.filter(attending_staff=user).order_by('-date_time')[:10]
+
+    # Aggregate Initial Diagnosis Counts
+    diagnosis_counts = MedicalRecord.objects.values('initial_diagnosis').annotate(count=Count('initial_diagnosis')).order_by('-count')
 
     return render(request, 'staff/staff_dashboard.html', {
+        'recent_records': recent_records,
         'total_patients_today': total_patients_today,
         'pending_appointments': pending_appointments,
         'current_queue_status': current_queue_status,
         'average_consultation_duration': average_consultation_duration,
         'weekly_patients': weekly_patients,
         'monthly_patients': monthly_patients,
+        'diagnosis_counts': diagnosis_counts,
     })
-    
+  
     
 @login_required
 def patient_dashboard(request):
@@ -469,7 +456,7 @@ def next_patient(request):
         checked_in=False
     ).order_by(
         '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'transaction_time'  # Oldest first
+        'scheduled_time'  # Oldest first
     )
 
     if tickets.exists():
@@ -588,3 +575,28 @@ def patient_dashboard(request):
         return redirect('patient_login')
     
     return render(request, 'patients/patient_dashboard.html', {'patient': patient, 'medical_records': medical_records})
+
+
+# my_app/views.py
+
+from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework import status
+from kiosk.models import Ticket
+from .serializers import AppointmentSerializer
+
+class AppointmentCreateAPIView(generics.CreateAPIView):
+    queryset = Ticket.objects.all()
+    serializer_class = AppointmentSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(
+            ticket_type='APPOINTMENT',
+            transaction_time=timezone.now()
+        )
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
