@@ -82,8 +82,6 @@
                     <th>Email</th>
                     <th>Role</th>
                     <th>Date Joined</th>
-                    <th>Status</th>
-                    <th>Password</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -101,14 +99,6 @@
                     <td>{{ staff.email }}</td>
                     <td>{{ staff.get_role_display }}</td>
                     <td>{{ staff.date_joined|date:"F d, Y" }}</td>
-                    <td>
-                        {% if staff.is_active_session %}
-                            <span class="badge badge-success">Active</span>
-                        {% else %}
-                            <span class="badge badge-error">Inactive</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ staff.password_changed|yesno:"********,Temporary Password" }}</td>
                     <td>
                         <form method="POST" action="{% url 'delete_staff' staff.id %}">
                             {% csrf_token %}
