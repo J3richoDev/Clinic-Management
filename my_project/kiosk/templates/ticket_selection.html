@@ -31,11 +31,12 @@
                         🚶 Walk-in
                     </button>
                 </form>
-                <form action="{% url 'kiosk:ticket_creation' ticket_type='APPOINTMENT' %}" method="get">
+                <form action="{% url 'kiosk:ticket_appointment' %}" method="get">
                     <button type="submit" class="btn btn-success w-full md:w-auto">
                         📅 Appointment
                     </button>
                 </form>
+                
             </div>
         </div>
     </div>

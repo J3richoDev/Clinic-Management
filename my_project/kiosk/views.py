@@ -123,6 +123,15 @@ def proceed_next_patient(request, ticket_id):
     # Redirect back to the referring page (dashboard)
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
+from django.shortcuts import render
+
+def ticket_appointment_view(request):
+    """
+    Renders the ticket appointment template.
+    """
+    return render(request, 'ticket_appointment.html')
+
+
 
 
 
