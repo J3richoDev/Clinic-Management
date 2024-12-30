@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container mx-auto mt-6 p-4">
@@ -6,25 +7,18 @@
 
     <!-- Metrics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <!-- Total Patients Today -->
         <div class="card bg-blue-100 shadow-md p-4">
             <h2 class="text-lg font-semibold">Total Patients Attended Today</h2>
             <p class="text-3xl font-bold mt-2">{{ total_patients_today }}</p>
         </div>
-
-        <!-- Pending Appointments -->
         <div class="card bg-yellow-100 shadow-md p-4">
             <h2 class="text-lg font-semibold">Pending Appointments</h2>
             <p class="text-3xl font-bold mt-2">{{ pending_appointments }}</p>
         </div>
-
-        <!-- Current Queue Status -->
         <div class="card bg-green-100 shadow-md p-4">
             <h2 class="text-lg font-semibold">Current Queue Status</h2>
             <p class="text-3xl font-bold mt-2">{{ current_queue_status }}</p>
         </div>
-
-        <!-- Average Consultation Duration -->
         <div class="card bg-purple-100 shadow-md p-4">
             <h2 class="text-lg font-semibold">Average Consultation Duration</h2>
             <p class="text-3xl font-bold mt-2">
@@ -37,7 +31,7 @@
         </div>
     </div>
 
-    <!-- Weekly & Monthly Performance -->
+    <!-- Weekly & Monthly Performance Metrics -->
     <div class="mt-8">
         <h2 class="text-2xl font-bold mb-4">Performance Metrics</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -49,6 +43,14 @@
                 <h3 class="text-lg font-semibold">Monthly Patients Attended</h3>
                 <p class="text-3xl font-bold mt-2">{{ monthly_patients }}</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Diagnosis Frequency Bar Chart -->
+    <div class="mt-8">
+        <h2 class="text-2xl font-bold mb-4">Diagnosis Frequency Overview</h2>
+        <div class="card p-4 bg-white shadow-md">
+            <canvas id="diagnosisChart" width="400" height="200"></canvas>
         </div>
     </div>
 
@@ -84,5 +86,34 @@
     </div>
 </div>
 
-
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('diagnosisChart').getContext('2d');
+        const diagnosisChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [{% for diagnosis in diagnosis_counts %}'{{ diagnosis.initial_diagnosis }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Diagnosis Frequency',
+                    data: [{% for diagnosis in diagnosis_counts %}{{ diagnosis.count }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                },
+                scales: {
+                    x: { title: { display: true, text: 'Diagnosis' } },
+                    y: { title: { display: true, text: 'Frequency' }, beginAtZero: true }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

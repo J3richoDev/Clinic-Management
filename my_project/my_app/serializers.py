@@ -49,3 +49,19 @@ class PatientAccountSerializer(serializers.ModelSerializer):
             validated_data['password'] = make_password(password)
 
         return super().create(validated_data)
+    
+
+    # my_app/serializers.py
+
+from rest_framework import serializers
+from kiosk.models import Ticket
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = [
+            'id', 'ticket_type', 'transaction_type', 'role', 'special_tag',
+            'certificate_type', 'details', 'queue_number', 'checked_in',
+            'scheduled_time', 'transaction_time'
+        ]
+        read_only_fields = ['queue_number', 'transaction_time']

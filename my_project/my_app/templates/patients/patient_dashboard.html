@@ -51,33 +51,59 @@
         <div class="card bg-white shadow-md rounded-md">
             <div class="card-body">
                 <h2 class="text-xl font-bold mb-4">📅 Appointments</h2>
-                <form method="POST" action="" class="space-y-4">
+                <form id="appointmentForm" action="" class="space-y-4">
                     {% csrf_token %}
+                    <div>
+                        <label for="role" class="block text-gray-700 font-medium mb-1">Select Role</label>
+                        <select id="role" name="role" class="select select-bordered w-full">
+                            <option value="FACULTY">FACULTY</option>
+                            <option value="PERSONNEL">PERSONNEL</option>
+                            <option value="STUDENT">STUDENT</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="special_tag" class="block text-gray-700 font-medium mb-1">Special Tag</label>
+                        <select id="special_tag" name="special_tag" class="select select-bordered w-full">
+                            <option value="NONE">NONE</option>
+                            <option value="PWD">PWD</option>
+                            <option value="SENIOR_CITIZEN">SENIOR CITIZEN</option>
+                        </select>
+                    </div>
                     <div>
                         <label for="appointment_type" class="block text-gray-700 font-medium mb-1">Select Appointment Type</label>
                         <select id="appointment_type" name="appointment_type" class="select select-bordered w-full">
-                            <option value="consult">Consultation</option>
-                            <option value="certificate">Medical Certificate</option>
-                            <option value="other">Other</option>
+                            <option value="DENTAL">Dental Consultation</option>
+                            <option value="MEDICAL">Medical Consultation</option>
+                            <option value="CERTIFICATE">Medical Certificate</option>
+                            <option value="OTHER">Other</option>
                         </select>
                     </div>
-
+                    <div id="certificate_type_group" class="hidden">
+                        <label for="certificate_type" class="block text-gray-700 font-medium mb-1">Select Certificate Type</label>
+                        <select id="certificate_type" name="certificate_type" class="select select-bordered w-full">
+                            <option value="ABSENCE">Absence</option>
+                            <option value="EMPLOYMENT">Employment</option>
+                            <option value="OJT">OJT</option>
+                            <option value="OSRA">OSRA</option>
+                        </select>
+                    </div>
+                    <div id="manual_input_group" class="hidden">
+                        <label for="manual_input" class="block text-gray-700 font-medium mb-1">Specify Details</label>
+                        <input type="text" id="manual_input" name="manual_input" class="input input-bordered w-full" placeholder="Enter details">
+                    </div>
                     <div>
                         <label for="appointment_date" class="block text-gray-700 font-medium mb-1">Select Date</label>
-                        <input type="date" id="appointment_date" name="appointment_date" 
-                               class="input input-bordered w-full" required>
+                        <input type="date" id="appointment_date" name="appointment_date" class="input input-bordered w-full" required>
                     </div>
-
                     <div>
                         <label for="appointment_time" class="block text-gray-700 font-medium mb-1">Select Time</label>
-                        <input type="time" id="appointment_time" name="appointment_time" 
-                               class="input input-bordered w-full" required>
+                        <input type="time" id="appointment_time" name="appointment_time" class="input input-bordered w-full" required>
                     </div>
-
                     <button type="submit" class="btn btn-primary w-full">Book Appointment</button>
                 </form>
             </div>
         </div>
+
 
         <!-- ✅ Medical Records Section -->
         <div class="card bg-white shadow-md rounded-md">
@@ -135,4 +161,84 @@
         </div>
     </div>
 </dialog>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const appointmentType = document.getElementById('appointment_type');
+        const certificateGroup = document.getElementById('certificate_type_group');
+        const manualInputGroup = document.getElementById('manual_input_group');
+        const appointmentForm = document.getElementById('appointmentForm');
+        
+        appointmentType.addEventListener('change', function () {
+            const selectedValue = appointmentType.value;
+
+            if (selectedValue === 'CERTIFICATE') {
+                certificateGroup.classList.remove('hidden');
+                manualInputGroup.classList.add('hidden');
+            } else if (selectedValue === 'OTHER') {
+                manualInputGroup.classList.remove('hidden');
+                certificateGroup.classList.add('hidden');
+            } else {
+                certificateGroup.classList.add('hidden');
+                manualInputGroup.classList.add('hidden');
+            }
+        });
+
+        // ✅ Handle async form submission
+        appointmentForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(appointmentForm);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Prepare the payload
+            const payload = {
+                ticket_type: 'APPOINTMENT',  // ✅ Static value
+                role: formData.get('role'),
+                special_tag: formData.get('special_tag'),
+                transaction_type: formData.get('appointment_type'),
+                details: formData.get('manual_input'),
+                scheduled_time: `${formData.get('appointment_date')}T${formData.get('appointment_time')}`
+            };
+
+            // ✅ Nullify `certificate_type` if appointment_type is not 'CERTIFICATE'
+            if (formData.get('appointment_type') === 'CERTIFICATE') {
+                payload.certificate_type = formData.get('certificate_type');
+            } else {
+                payload.certificate_type = null; // Explicitly set to null
+            }
+
+            try {
+                const response = await fetch('/my_app/appointments/create/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to book appointment');
+                }
+
+                const responseData = await response.json();
+                alert('Appointment successfully booked!');
+                appointmentForm.reset();
+
+                // Reset conditional fields
+                certificateGroup.classList.add('hidden');
+                manualInputGroup.classList.add('hidden');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Failed to book appointment: ${error.message}`);
+            }
+        });
+    });
+</script>
+
+
+
+
 {% endblock %}

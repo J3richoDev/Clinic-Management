@@ -5,6 +5,7 @@ from . import views
 from django.contrib.auth.views import LogoutView
 from .views import DashboardStatsAPIView
 from .views import PatientRegistrationAPIView
+from .views import AppointmentCreateAPIView
 
 urlpatterns = [
 
@@ -55,6 +56,6 @@ urlpatterns = [
     path('patient/register/', views.patient_registration, name='patient_register'),
     path('patient/login/', views.patient_login, name='patient_login'),
     path('patient/dashboard/', views.patient_dashboard, name='patient_dashboard'),
-
+    path('appointments/create/', AppointmentCreateAPIView.as_view(), name='appointment-create'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

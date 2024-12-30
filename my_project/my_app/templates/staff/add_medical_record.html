@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
-{% load widget_tweaks%}
+{% load widget_tweaks %}
 
 {% block title %}Queue for Walk-In Patients{% endblock %}
 {% block heading %}Queue for Walk-In Patients{% endblock %}
@@ -11,28 +11,86 @@
 {% if not request.user.is_superuser %}
 
 <div class="card w-full p-6 bg-base-100 shadow-xl mt-2">
+    <h1 class="font-bold text-xl mb-5">
+        Add Medical Record for 
+        <span class="text-blue-500">{{ patient.first_name }} {{ patient.last_name }}</span>
+    </h1>
 
-    <h1 class="font-bold text-xl mb-5">Add Medical Record for <span class="text-blue-500">{{ patient.first_name }} {{ patient.last_name }}</span></h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form|crispy }}
-    <div class="flex justify-end ">
-        
-    <button class="btn btn-primary text-white" type="submit">Save Record</button>
-    </div>
-</form>
+    <form method="post" class="grid grid-cols-2 gap-4">
+        {% csrf_token %}
 
+        <!-- Transaction Type (Spans 2 columns) -->
+        <div class="col-span-2">
+            <label for="id_transaction_type" class="block text-sm font-medium text-gray-700">Transaction Type</label>
+            {{ form.transaction_type|attr:"class:input input-bordered w-full" }}
+        </div>
 
+        <!-- Details (Spans 2 columns) -->
+        <div class="col-span-2">
+            <label for="id_details" class="block text-sm font-medium text-gray-700">Details</label>
+            {{ form.details|attr:"class:textarea textarea-bordered w-full" }}
+        </div>
+
+        <!-- Height -->
+        <div>
+            <label for="id_height" class="block text-sm font-medium text-gray-700">Height</label>
+            {{ form.height|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Weight -->
+        <div>
+            <label for="id_weight" class="block text-sm font-medium text-gray-700">Weight</label>
+            {{ form.weight|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Heart Rate -->
+        <div>
+            <label for="id_heart_rate" class="block text-sm font-medium text-gray-700">Heart Rate</label>
+            {{ form.heart_rate|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Respiratory Rate -->
+        <div>
+            <label for="id_respiratory_rate" class="block text-sm font-medium text-gray-700">Respiratory Rate</label>
+            {{ form.respiratory_rate|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Temperature -->
+        <div>
+            <label for="id_temperature" class="block text-sm font-medium text-gray-700">Temperature</label>
+            {{ form.temperature|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Blood Pressure -->
+        <div>
+            <label for="id_blood_pressure" class="block text-sm font-medium text-gray-700">Blood Pressure</label>
+            {{ form.blood_pressure|attr:"class:input input-bordered w-full" }}
+        </div>
+
+        <!-- Pain Scale (Spans 2 columns) -->
+        <div class="col-span-2">
+            <label for="id_pain_scale" class="block text-sm font-medium text-gray-700">Pain Scale (1-10)</label>
+            {{ form.pain_scale|attr:"class:select select-bordered w-full" }}
+        </div>
+
+        <!-- Other Signs (Spans 2 columns) -->
+        <div class="col-span-2">
+            <label for="id_other_signs" class="block text-sm font-medium text-gray-700">Other Signs</label>
+            {{ form.other_signs|attr:"class:textarea textarea-bordered w-full" }}
+        </div>
+
+        <!-- Initial Diagnosis (Spans 2 columns) -->
+        <div class="col-span-2">
+            <label for="id_initial_diagnosis" class="block text-sm font-medium text-gray-700">Initial Diagnosis</label>
+            {{ form.initial_diagnosis|attr:"class:select select-bordered w-full" }}
+        </div>
+
+        <!-- Submit Button (Spans 2 columns) -->
+        <div class="col-span-2 flex justify-end mt-4">
+            <button class="btn btn-primary text-white" type="submit">Save Record</button>
+        </div>
+    </form>
 </div>
-
 
 {% endif %}
 {% endblock %}
-
-
-
-
-
-
-
-
