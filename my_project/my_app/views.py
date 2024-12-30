@@ -428,7 +428,7 @@ def next_patient(request):
         checked_in=False
     ).order_by(
         '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'transaction_time'  # Oldest first
+        'scheduled_time'  # Oldest first
     )
 
     if tickets.exists():

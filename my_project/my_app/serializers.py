@@ -62,6 +62,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'ticket_type', 'transaction_type', 'role', 'special_tag',
             'certificate_type', 'details', 'queue_number', 'checked_in',
-            'scheduled_time', 'transaction_time'
+            'scheduled_time', 'transaction_time', 'transaction_group'
         ]
         read_only_fields = ['queue_number', 'transaction_time']

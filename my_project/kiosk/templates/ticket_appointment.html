@@ -1,49 +1,13 @@
 {% extends 'guest.html' %}
 {% load static %}
 
-{% block title %}Patient Dashboard{% endblock %}
 
 {% block content %}
 
-<div class="navbar sticky top-0 bg-base-100  z-10 shadow-md ">
-    <div class="flex flex-row justify-between w-full">
-        <div class="mb-2 font-semibold rounded-lg text-2xl m-3">
-            <a href="" class="flex flex-row items-center">
-                <img class="mask mask-squircle w-10 mr-4" src="{% static 'logo/clinic_logo.png' %}" alt="CLinic">
-                Bulsu Clinic
-            </a>
-        </div>
-        <div class="mr-3">
-            <div class="dropdown dropdown-end ml-4">
-                <label tabindex="0" class="btn btn-ghost btn-circle avatar">
-                    <div class="w-10 rounded-full">
-                        <img src="{% if request.user.profile_picture %}{{ request.user.profile_picture.url }}{% else %}{% static 'default-profile.png' %}{% endif %}" alt="Profile">
-                    </div>
-                </label>
-              <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
-                  <li class="justify-between">
-                      <a href="/users/my-profile">My Profile</a>
-                  </li>
-                  <div class="divider mt-0 mb-0"></div>
-                  <li>
-    
-                      <button class="hover:text-black-20" onclick="logout_modal.showModal()">
-                          Logout
-                      </button>
-                  </li>
-              </ul>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="container mx-auto px-4 py-6">
 
-    <!-- ✅ Dashboard Header -->
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold">Patient Dashboard</h1>
-        <p class="text-gray-600 mt-2">Manage your appointments and view medical records conveniently.</p>
-    </div>
+
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -103,64 +67,9 @@
                 </form>
             </div>
         </div>
-
-
-        <!-- ✅ Medical Records Section -->
-        <div class="card bg-white shadow-md rounded-md">
-            <div class="card-body">
-                <h2 class="text-xl font-bold mb-4">📄 Medical Records</h2>
-                {% if medical_records %}
-                    <div class="overflow-x-auto">
-                        <table class="table w-full table-zebra">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-4 py-2 text-left">Date</th>
-                                    <th class="px-4 py-2 text-left">Transaction Type</th>
-                                    <th class="px-4 py-2 text-left">Details</th>
-                                    <th class="px-4 py-2 text-left">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for record in medical_records %}
-                                <tr>
-                                    <td class="px-4 py-2">{{ record.date_time }}</td>
-                                    <td class="px-4 py-2">{{ record.transaction_type }}</td>
-                                    <td class="px-4 py-2">{{ record.details|truncatechars:50 }}</td>
-                                    <td class="px-4 py-2">
-                                        <a href="{% url 'medical_record_detail' record.id %}" class="btn btn-primary btn-sm">View Details</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="text-gray-500 text-center">No medical records found.</p>
-                {% endif %}
-            </div>
-        </div>
     </div>
 </div>
 
-<dialog id="logout_modal" class="modal">
-    <div class="modal-box">
-
-        <form method="dialog">
-            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-        </form>
-
-        <h3 class="text-lg font-bold">Confirm Logout</h3>
-        <p class="py-4">Are you sure you want to log out?</p>
-
-        <div class="modal-action">
-            <button class="btn" onclick="logout_modal.close()">Cancel</button>
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-error">Logout</button>
-            </form>
-        </div>
-    </div>
-</dialog>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const appointmentType = document.getElementById('appointment_type');

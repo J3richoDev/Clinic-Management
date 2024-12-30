@@ -35,7 +35,8 @@
                     <div class="text-center">
                         <h2 class="text-4xl font-semibold">{{ ticket.queue_number }}</h2>
                         <h2 class="text-lg font-semibold">{{ ticket.transaction_type }}</h2>
-                        <p class="text-gray-600 text-sm">🕒 {{ ticket.transaction_time_local }}</p>
+                        <h2 class="text-lg font-semibold">{{ ticket.ticket_type }}</h2>
+                        <p class="text-gray-600 text-sm">🕒 {{ ticket.scheduled_time }}</p>
                         <p class="text-gray-500 text-sm">{{ ticket.truncated_details }}</p>
                     </div>
                     <div>
@@ -58,7 +59,8 @@
                     <div class="text-center">
                         <h2 class="text-4xl font-semibold">{{ ticket.queue_number }}</h2>
                         <h2 class="text-lg font-semibold">{{ ticket.transaction_type }}</h2>
-                        <p class="text-gray-600 text-sm">🕒 {{ ticket.transaction_time_local }}</p>
+                        <h2 class="text-lg font-semibold">{{ ticket.ticket_type }}</h2>
+                        <p class="text-gray-600 text-sm">🕒 {{ ticket.scheduled_time }}</p>
                         <p class="text-gray-500 text-sm">{{ ticket.truncated_details }}</p>
                     </div>
                     <div>
