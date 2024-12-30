@@ -320,14 +320,29 @@ def change_password(request):
 
     return render(request, 'accounts/change_password.html', {'form': form})
 
-@login_required
-def patient_view_profile(request):
-    return render(request, 'patients/view_acc.html', {'user': request.user})
 
-@login_required
+def patient_view_profile(request):
+    if not request.session.get('patient_id'):
+        return redirect('patient_login')
+
+    patient_id = request.session.get('patient_id')
+    
+    user = get_object_or_404(PatientAccount, id=patient_id)
+    
+    return render(request, 'patients/view_acc.html', {'user': user})
+
 def patient_edit_own_profile(request):
+    
+    if not request.session.get('patient_id'):
+        return redirect('patient_login')
+
+    patient_id = request.session.get('patient_id')
+    
+    user = get_object_or_404(PatientAccount, id=patient_id)
+    
+    
     if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=request.user)
+        form = ProfileForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
             messages.success(request, "Your profile has been updated successfully.")
@@ -335,23 +350,30 @@ def patient_edit_own_profile(request):
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        form = ProfileForm(instance=request.user)
+        form = ProfileForm(instance=user)
 
     return render(request, 'patients/edit_acc.html', {'form': form})
 
-@login_required
 def patient_change_password(request):
+    
+    if not request.session.get('patient_id'):
+        return redirect('patient_login')
+
+    patient_id = request.session.get('patient_id')
+    
+    patient_user = get_object_or_404(PatientAccount, id=patient_id)
+    
     if request.method == 'POST':
-        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        form = CustomPasswordChangeForm(user=patient_user, data=request.POST)
         if form.is_valid():
             form.save()
-            update_session_auth_hash(request, request.user)  # Keep the user logged in
+            update_session_auth_hash(request, patient_user)  # Keep the user logged in
             messages.success(request, "Your password has been updated successfully.")
             return redirect('patient_view_profile')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        form = CustomPasswordChangeForm(user=request.user)
+        form = CustomPasswordChangeForm(user=patient_user)
 
     return render(request, 'patients/change_pw.html', {'form': form})
 

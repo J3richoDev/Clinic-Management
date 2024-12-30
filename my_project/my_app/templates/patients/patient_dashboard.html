@@ -17,7 +17,7 @@
             <div class="dropdown dropdown-end ml-4">
                 <label tabindex="0" class="btn btn-ghost btn-circle avatar">
                     <div class="w-10 rounded-full">
-                        <img src="{% if request.user.profile_picture %}{{ request.user.profile_picture.url }}{% else %}{% static 'default-profile.png' %}{% endif %}" alt="Profile">
+                        <img src="{% if patient.profile_picture %}{{ patient.profile_picture.url }}{% else %}{% static 'default-profile.png' %}{% endif %}" alt="Profile">
                     </div>
                 </label>
               <ul tabindex="0" class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
@@ -26,7 +26,6 @@
                   </li>
                   <div class="divider mt-0 mb-0"></div>
                   <li>
-    
                       <button class="hover:text-black-20" onclick="logout_modal.showModal()">
                           Logout
                       </button>
