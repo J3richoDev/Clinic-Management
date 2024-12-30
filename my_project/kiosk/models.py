@@ -54,10 +54,10 @@ class Ticket(models.Model):
     certificate_type = models.CharField(max_length=20, choices=CERTIFICATE_CHOICES, blank=True, null=True)
     details = models.TextField(blank=True, null=True)
     queue_number = models.CharField(max_length=4, unique=True)
-    checked_in = models.BooleanField(default=False)
+    checked_in_time = models.DateTimeField(blank=True, null=True)  
     created_at = models.DateTimeField(auto_now_add=True)
     transaction_time = models.DateTimeField(default=now)
-    scheduled_time = models.DateTimeField(blank=True, null=True)  # For appointments
+    scheduled_time = models.DateTimeField(blank=True, null=True)  
 
     def local_transaction_time(self):
         return localtime(self.transaction_time)
