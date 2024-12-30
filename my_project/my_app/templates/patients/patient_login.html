@@ -5,14 +5,7 @@
 
 {% block content %}
 
-<div class="relative w-full">
-    <a href="{% url 'home' %}" 
-        class="btn bg-base-100 absolute left-0 top-4 ml-4">
-        ← Back
-    </a>
-</div>
-
-<div class="grid md:grid-cols-2 grid-cols-1 min-h-screen bg-base-100 rounded-xl">
+<div class="hidden md:grid md:grid-cols-2 min-h-screen bg-base-100 rounded-xl">
     <div class="min-h-full">
         <div class="hero min-h-full rounded-l-xl bg-sky-400">
             <div class="hero-content py-12">
@@ -91,6 +84,59 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+
+<div class="md:hidden min-h-screen bg-base-100 flex flex-col justify-center px-6">
+    <div class="text-center mb-8">
+        <img src="{% static 'logo/clinic_logo.png' %}" alt="Omnia Pic" class="w-40 mx-auto mb-4">
+        <h1 class="text-2xl font-bold">Welcome to Bulsu Clinic!</h1>
+        <p class="mt-2 text-sm text-gray-600">Take control of your healthcare needs.</p>
+    </div>
+
+    <div>
+        <h2 class="text-xl text-center font-semibold mb-4">Patient Login</h2>
+        <form method="POST" action="{% url 'patient_login' %}">
+            {% csrf_token %}
+            
+            <!-- Email Field -->
+            <div class="mb-4">
+                <label class="font-medium">{{ form.email.label }}</label>
+                <div class="relative">
+                    {{ form.email|add_class:"input input-bordered w-full text-black" }}
+                </div>
+                {% if form.email.errors %}
+                    <p class="text-sm text-red-500 mt-1">{{ form.email.errors|striptags }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Password Field -->
+            <div class="mb-4">
+                <label class="font-medium">{{ form.password.label }}</label>
+                <div class="relative">
+                    {{ form.password|add_class:"input input-bordered w-full text-black" }}
+                    <i class="fa fa-eye-slash absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer" onclick="toggleVisibility('id_password')"></i>
+                </div>
+                {% if form.password.errors %}
+                    <p class="text-sm text-red-500 mt-1">{{ form.password.errors|striptags }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Forgot Password Link -->
+            <div class="text-right text-primary">
+                <a href="/users/forgot-password/" class="text-sm hover:text-primary hover:underline">Forgot Password?</a>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary mt-5 w-full text-white">Login</button>
+            
+            <!-- Register Link -->
+            <div class="text-center mt-4">
+                Don't have an account yet?
+                <a href="/my_app/patient/register" class="hover:text-primary hover:underline">Register</a>
+            </div>
+        </form>
     </div>
 </div>
 
