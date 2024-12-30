@@ -11,7 +11,7 @@ from .models import CustomUser, PatientAccount, MedicalRecord
 from kiosk.models import Ticket
 from .forms import ProfileForm, CustomPasswordChangeForm, PatientForm, MedicalRecordForm
 from django.db import connection
-from django.db.models import Case, When, Value, IntegerField, Count, Avg, Q
+from django.db.models import Case, When, Value, IntegerField, Count, Avg, Q, ExpressionWrapper, DurationField, F
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth.views import LoginView
@@ -189,18 +189,29 @@ def staff_dashboard(request):
     total_patients_today = MedicalRecord.objects.filter(attending_staff=user, date_time__date=today).count()
     pending_appointments = Ticket.objects.filter(transaction_group=user.role.upper(), scheduled_time__date=today, checked_in=False).count()
     current_queue_status = Ticket.objects.filter(transaction_group=user.role.upper(), checked_in=False).count()
-    
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT AVG(
-                (JULIANDAY(date_time) - JULIANDAY('now')) * 24 * 60
-            ) AS avg_duration
-            FROM my_app_medicalrecord
-            WHERE attending_staff_id = %s AND DATE(date_time) = DATE('now')
-        """, [user.id])
-        avg_duration = cursor.fetchone()[0]
 
-    average_consultation_duration = round(avg_duration, 2) if avg_duration else None
+    # **4. Average Consultation Duration (Using Raw SQL Query for SQLite)**
+    consultation_duration = (
+        Ticket.objects.filter(checked_in_time__isnull=False)  # Only include tickets with valid checked_in_time
+        .annotate(queue_time=ExpressionWrapper(
+            F('checked_in_time') - F('transaction_time'),
+            output_field=DurationField()
+        ))
+        .aggregate(average_queue_time=Avg('queue_time'))['average_queue_time']
+    )
+    
+    average_consultation_duration = 0
+    if consultation_duration:
+        total_seconds = int(consultation_duration.total_seconds())
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+
+        if hours > 0 and minutes > 0:
+            average_consultation_duration = f"{hours} hr {minutes} min"
+        elif hours > 0:
+            average_consultation_duration = f"{hours} hr"
+        else:
+            average_consultation_duration = f"{minutes} min"
 
     weekly_patients = MedicalRecord.objects.filter(attending_staff=user, date_time__date__gte=start_of_week).count()
     monthly_patients = MedicalRecord.objects.filter(attending_staff=user, date_time__date__gte=start_of_month).count()
@@ -397,13 +408,21 @@ def queue_view(request):
 @login_required
 def queue_display(request):
     # Fetch tickets currently being served and next in line
+    if request.user.role in ['nurse', 'dentist', 'physician']:
+        transaction_group = request.user.role.upper()
+    else:
+        return HttpResponseForbidden("You are not authorized to access this page.")
+
+    # Fetch tickets for the user's transaction group
     tickets = Ticket.objects.filter(
+        transaction_group=transaction_group,
         checked_in=False
     ).order_by(
-        '-special_tag',  # Higher priority first
+        '-special_tag',  # Higher priority (PWD/Senior Citizen) first
         'transaction_time'  # Oldest first
-    )[:5]  # Display only the top 5 in the queue
-    
+    )
+
+    # Annotate each ticket with a label
     for idx, ticket in enumerate(tickets):
         if idx == 0:
             ticket.label = "Being Served"
@@ -411,6 +430,15 @@ def queue_display(request):
             ticket.label = "Next"
         else:
             ticket.label = "In Queue"
+
+        # Localize transaction time for display
+        ticket.transaction_time_local = localtime(ticket.transaction_time)
+
+        # Optional: Truncate details for "Other" transaction types
+        if ticket.transaction_type == "Other" and ticket.details:
+            ticket.truncated_details = ticket.details[:15] + "..."  # Show first 15 characters with "..."
+        else:
+            ticket.truncated_details = ticket.get_transaction_type_display()
 
     return render(request, 'staff/queue_display.html', {'tickets': tickets})
 
@@ -435,6 +463,7 @@ def next_patient(request):
         # Mark the current "Being Served" ticket as checked-in
         current_ticket = tickets.first()
         current_ticket.checked_in = True
+        current_ticket.checked_in_time = now()
         current_ticket.save()
 
         # Logically, the next ticket in the queue will become "Being Served"

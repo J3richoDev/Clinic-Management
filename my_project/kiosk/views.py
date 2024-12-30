@@ -32,6 +32,8 @@ def ticket_creation(request, ticket_type):
                 ticket.transaction_group = 'DENTIST'
             elif ticket.transaction_type == 'MEDICAL':
                 ticket.transaction_group = 'PHYSICIAN'
+            else:
+                ticket.transaction_group = 'NURSE'
 
             # ✅ Set scheduled_time to now() if it's a walk-in appointment
             if ticket_type.upper() == 'WALKIN':
