@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Details{% endblock %}
+{% block heading %}Patient Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- ✅ Patient Details Section -->
+    <div class="bg-white shadow-md rounded-md p-6 mb-8">
+        <div class="flex flex-row gap-5">
+            <div class="m-5">
+                <div class="flex justify-center mb-4">
+                    <img 
+                        src="{{ user.profile_picture.url|default:'/media/profile_pictures/default.jpg' }}" 
+                        alt="Profile Picture" 
+                        class="w-32 h-32 rounded-full border-4 border-gray-200 object-cover"
+                    >
+                </div>
+                <p class="text-center font-bold text-lg mb-4">{{ patient.role }}</p>
+            </div>
+            <div class="flex-grow mt-4">
+                <div class="flex flex-row items-center gap-5 mb-4">
+                    <h1 class="text-3xl font-bold text-left flex-grow">{{ patient.first_name }} {{ patient.middle_name|default:'' }} {{ patient.last_name }}</h1>
+                    <p class="col-span-2 border p-1 rounded-lg"><strong>📱</strong> {{ patient.contact_number }}</p>
+                    <p class="col-span-2 border p-1 rounded-lg"><strong>📧</strong> {{ patient.email }}</p>
+                </div>
+                <div class="flex flex-row gap-5">
+                    <p class="btn btn-sm text-md"><strong>🔢 Age:</strong> {{ patient.age }}</p>
+                    <p class="btn btn-sm  text-md"><strong>⚤ Sex:</strong> {{ patient.sex }}</p>
+                    <p class="btn btn-sm  text-md"><strong>📍 Address:</strong> {{ patient.address }}</p>
+                </div>
+                <div class="mt-6 border-t flex flex-row items-center gap-3">
+                    <p class="p-6 text-lg"><strong>🩸 Blood Type:</strong> {{ patient.blood_type|default:'N/A' }}</p>
+                    <p class="p-6 text-lg"><strong>⚠️ Allergies:</strong> {{ patient.allergies|default:'None' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white shadow-md rounded-md p-6 mb-8">
+        <p class="font-bold text-lg mb-4">Other details</p>
+        <div class="grid grid-cols-3 border-t pt-4 flex flex-row gap-2">
+            <p><strong>🏫 Campus:</strong> {{ patient.campus|default:'N/A' }}</p>
+            <p><strong>🏢 College:</strong> {{ patient.college|default:'N/A' }}</p>
+            <p><strong>📚 Course & Year:</strong> {{ patient.course_year|default:'N/A' }}</p>
+            <p><strong>📞 Emergency Contact:</strong> {{ patient.emergency_contact }} ({{ patient.relation }})</p>
+        </div>
+    </div>
+
+    <!-- ✅ Medical Records Section -->
+    <div class="bg-white shadow-md rounded-md p-6">
+        <h2 class="text-2xl font-bold mb-6 text-center">📄 Medical Records</h2>
+        {% if medical_records %}
+        <div class="overflow-x-auto">
+            <table class="table w-full border border-gray-200 rounded-md">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-2 text-left">Transaction Type</th>
+                        <th class="px-4 py-2 text-left">Date & Time</th>
+                        <th class="px-4 py-2 text-left">Attending Staff</th>
+                        <th class="px-4 py-2 text-left">Details</th>
+                        <th class="px-4 py-2 text-left">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in medical_records %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">{{ record.transaction_type }}</td>
+                        <td class="px-4 py-2">{{ record.date_time|date:"F d, Y H:i" }}</td>
+                        <td class="px-4 py-2">{{ record.attending_staff|default:'N/A' }}</td>
+                        <td class="px-4 py-2">{{ record.details|truncatechars:50 }}</td>
+                        <td class="px-4 py-2">
+                            <a href="{% url 'medical_record_detail' record.id %}" class="btn btn-primary btn-sm">View Details</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 py-4">🚫 No medical records available for this patient.</p>
+        {% endif %}
+    </div>
+
+    <!-- ✅ Action Buttons -->
+    <div class="flex flex-col md:flex-row gap-4 mt-8 justify-center">
+        <a href="{% url 'staff_dashboard' %}" class="btn btn-neutral w-full md:w-auto">🔙 Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

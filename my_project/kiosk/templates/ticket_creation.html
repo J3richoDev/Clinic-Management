@@ -1,99 +1,110 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="winter">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Your Ticket</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="vh-100 d-flex align-items-center justify-content-center bg-light">
+<body style="font-family: 'Poppins', sans-serif;">
 
-    <!-- Centered Container -->
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card shadow-sm p-4">
-                    <h2 class="text-center mb-4">Create Your Ticket</h2>
-                    <form method="post" class="needs-validation">
+    <div class="flex justify-center items-center min-h-screen bg-base-200">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-center">
+                <div class="card bg-white shadow-md rounded-lg w-full md:w-1/2 lg:w-1/3 p-6">
+                    <div class="flex flex-row gap-2 items-center justify-center text-2xl font-bold">
+                        <div class="avatar">
+                            <div class="w-12 rounded-full">
+                                <img src="{% static 'logo/clinic_logo.png' %}">
+                            </div>
+                          </div>
+                        <h2 class="mt-1">Create Your Ticket</h2>
+                    </div>
+                    
+                    <form method="post" class="space-y-4">
                         {% csrf_token %}
-                        
-                        <!-- Transaction Type -->
-                        <div class="mb-3">
-                            <label for="id_transaction_type" class="form-label">Transaction type:</label>
+        
+                        <!-- ✅ Transaction Type -->
+                        <div>
+                            <label for="id_transaction_type" class="block text-sm font-medium text-gray-700 mb-1">Transaction Type:</label>
                             {{ form.transaction_type }}
                         </div>
-
-                        <!-- Role -->
-                        <div class="mb-3">
-                            <label for="id_role" class="form-label">Role:</label>
+        
+                        <!-- ✅ Role -->
+                        <div>
+                            <label for="id_role" class="block text-sm font-medium text-gray-700 mb-1">Role:</label>
                             {{ form.role }}
                         </div>
-
-                        <!-- Special Tag -->
-                        <div class="mb-3">
-                            <label for="id_special_tag" class="form-label">Special tag:</label>
+        
+                        <!-- ✅ Special Tag -->
+                        <div>
+                            <label for="id_special_tag" class="block text-sm font-medium text-gray-700 mb-1">Special Tag:</label>
                             {{ form.special_tag }}
                         </div>
-
-                        <!-- Scheduled Time -->
-                        <div class="mb-3">
-                            <label for="id_scheduled_time" class="form-label">Scheduled time:</label>
+                        
+                        {% if 'APPOINTMENT' in request.path %}
+                        <div>
+                            <label for="id_scheduled_time" class="block text-sm font-medium text-gray-700 mb-1">Scheduled Time:</label>
                             {{ form.scheduled_time }}
                         </div>
-
-                        <!-- Certificate Type -->
-                        <div id="certificate-row" class="mb-3" style="display: none;">
-                            <label for="id_certificate_type" class="form-label">Certificate Type:</label>
+                        {% endif %}
+        
+                        <!-- ✅ Certificate Type -->
+                        <div id="certificate-row" class="hidden">
+                            <label for="id_certificate_type" class="block text-sm font-medium text-gray-700 mb-1">Certificate Type:</label>
                             {{ form.certificate_type }}
                         </div>
-
-                        <!-- Details -->
-                        <div id="details-row" class="mb-3" style="display: none;">
-                            <label for="id_details" class="form-label">Details:</label>
+        
+                        <!-- ✅ Details -->
+                        <div id="details-row" class="hidden">
+                            <label for="id_details" class="block text-sm font-medium text-gray-700 mb-1">Details:</label>
                             {{ form.details }}
                         </div>
-
-                        <!-- Submit Button -->
-                        <button type="submit" class="btn btn-primary w-100">Generate Ticket</button>
+        
+                        <!-- ✅ Submit Button -->
+                        <button type="submit" class="btn btn-primary w-full mt-6">🎫 Generate Ticket</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const transactionType = document.getElementById('id_transaction_type');
-            const certificateType = document.getElementById('id_certificate_type');
-            const certificateRow = certificateType.closest('div');
-            const detailsField = document.getElementById('id_details');
-            const detailsRow = detailsField.closest('div');
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const transactionType = document.getElementById('id_transaction_type');
+        const certificateType = document.getElementById('id_certificate_type');
+        const certificateRow = document.getElementById('certificate-row');
+        const detailsField = document.getElementById('id_details');
+        const detailsRow = document.getElementById('details-row');
 
-            certificateRow.style.display = 'none';
-            detailsRow.style.display = 'none';
+        // Initially hide rows
+        certificateRow.classList.add('hidden');
+        detailsRow.classList.add('hidden');
 
-            transactionType.addEventListener('change', function () {
-                const selectedValue = transactionType.value;
+        transactionType.addEventListener('change', function () {
+            const selectedValue = transactionType.value;
 
-                if (selectedValue === 'CERTIFICATE') {
-                    certificateRow.style.display = 'block';
-                    detailsRow.style.display = 'none';
-                    detailsField.value = '';
-                } else if (selectedValue === 'OTHER') {
-                    certificateRow.style.display = 'none';
-                    detailsRow.style.display = 'block';
-                    certificateType.value = '';
-                } else {
-                    certificateRow.style.display = 'none';
-                    detailsRow.style.display = 'none';
-                    detailsField.value = '';
-                    certificateType.value = '';
-                }
-            });
+            if (selectedValue === 'CERTIFICATE') {
+                certificateRow.classList.remove('hidden');
+                detailsRow.classList.add('hidden');
+                detailsField.value = '';
+            } else if (selectedValue === 'OTHER') {
+                certificateRow.classList.add('hidden');
+                detailsRow.classList.remove('hidden');
+                certificateType.value = '';
+            } else {
+                certificateRow.classList.add('hidden');
+                detailsRow.classList.add('hidden');
+                detailsField.value = '';
+                certificateType.value = '';
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>

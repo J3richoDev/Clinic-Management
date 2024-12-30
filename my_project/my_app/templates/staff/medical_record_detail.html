@@ -1,0 +1,64 @@
+{% extends 'guest.html' %}
+{% load static %}
+
+{% block title %}Medical Record Details{% endblock %}
+{% block heading %}Medical Record Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- ✅ Page Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold">📄 Medical Record Details</h1>
+        <p class="text-gray-600 mt-2">Detailed information about this medical record.</p>
+    </div>
+
+    <!-- ✅ Medical Record Details Card -->
+    <div class="card bg-white shadow-md rounded-md mb-6">
+        <div class="card-body">
+            <h2 class="text-2xl font-bold mb-4">📝 General Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
+                <div class="flex flex-col gap-4">
+                    <p><strong>👤 Patient Name:</strong> {{ record.patient.first_name }} {{ record.patient.middle_name|default:'' }} {{ record.patient.last_name }}</p>
+                    <p><strong>📅 Date & Time:</strong> {{ record.date_time|date:"F d, Y H:i" }}</p>
+                    <p><strong>📋 Transaction Type:</strong> {{ record.transaction_type }}</p>
+                    <p><strong>🧑‍⚕️ Attending Staff:</strong> {{ record.attending_staff|default:'N/A' }}</p>
+                </div>
+                <div>
+                    <p><strong>📝 Details:</strong></p>
+                    <p class="text-gray-600">{{ record.details|default:"No additional details provided." }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Vitals Information -->
+    <div class="card bg-white shadow-md rounded-md mb-6">
+        <div class="card-body">
+            <h2 class="text-2xl font-bold mb-4">🩺 Vitals</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-gray-700">
+                <p><strong>🩸 Blood Pressure:</strong> {{ record.blood_pressure|default:'N/A' }}</p>
+                <p><strong>❤️ Heart Rate:</strong> {{ record.heart_rate|default:'N/A' }} bpm</p>
+                <p><strong>🌡️ Temperature:</strong> {{ record.temperature|default:'N/A' }}°C</p>
+                <p><strong>📏 Height:</strong> {{ record.height|default:'N/A' }} cm</p>
+                <p><strong>⚖️ Weight:</strong> {{ record.weight|default:'N/A' }} kg</p>
+                <p><strong>😖 Pain Scale:</strong> {{ record.pain_scale|default:'N/A' }}</p>
+                <p><strong>💨 Respiratory Rate:</strong> {{ record.respiratory_rate|default:'N/A' }} bpm</p>
+                <p><strong>🔍 Other Signs:</strong> {{ record.other_signs|default:'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ Diagnosis Section -->
+    <div class="card bg-white shadow-md rounded-md mb-6">
+        <div class="card-body">
+            <h2 class="text-2xl font-bold mb-4">🧠 Initial Diagnosis</h2>
+            <p class="text-gray-700">{{ record.initial_diagnosis|default:'No initial diagnosis provided.' }}</p>
+        </div>
+    </div>
+
+    <!-- ✅ Action Buttons -->
+    <div class="flex flex-col md:flex-row gap-4 justify-center mt-8">
+        <a href="{% url 'patient_dashboard' %}" class="btn btn-neutral w-full md:w-auto">⬅️ Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

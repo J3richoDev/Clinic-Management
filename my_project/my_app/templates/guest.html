@@ -41,6 +41,14 @@
         {% endblock %}
     </div>
 
-
+    <script>
+        // Automatically remove toasts after 3 seconds
+        setTimeout(() => {
+            const toasts = document.querySelectorAll('.toast .alert');
+            toasts.forEach((toast) => toast.remove());
+        }, 3000);
+    
+    
+    </script>
 </body>
 </html>
