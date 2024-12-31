@@ -76,6 +76,10 @@
                 <label class="font-medium">Address</label>
                 <input type="text" id="address" class="input input-bordered w-full" placeholder="Enter your address">
             </div>
+            <div class="mt-4">
+                <label class="font-medium">Contact No</label>
+                <input type="text" class="input input-bordered w-full" placeholder="Contact No">
+            </div>
             
 
             <!-- Email -->
@@ -153,12 +157,6 @@
                     </select>
                 </div>
     
-                <!-- ID Number -->
-                <div id="idNumberField">
-                    <label class="font-medium">ID Number</label>
-                    <input type="text" class="input input-bordered w-full" placeholder="ID Number">
-                </div>
-    
                 <!-- Campus -->
                 <div id="campusField">
                     <label class="font-medium">Campus</label>
@@ -179,7 +177,7 @@
     
                 <!-- Emergency Contact -->
                 <div>
-                    <label class="font-medium">Emergency Contact</label>
+                    <label class="font-medium">Emergency Person</label>
                     <input type="text" class="input input-bordered w-full" placeholder="Contact Name">
                 </div>
                 <div>
@@ -236,13 +234,14 @@
             first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
             last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
             email: getValue('input[placeholder="Enter your email"]', document.getElementById('registrationFormPage1')),
+            contact_number: getValue('input[placeholder="Contact No"]', document.getElementById('registrationFormPage1')),
             address: getValue('#address', document.getElementById('registrationFormPage1')),
             password: getValue('#password1', document.getElementById('registrationFormPage1')),
             confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
         };
     
         // Basic validation
-        if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password) {
+        if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password || !formData.contact_number) {
             displayError('All fields are required in Step 1!', 'errorMessagePage1');
             return;
         }
@@ -281,21 +280,17 @@
     function toggleFieldsBasedOnAccountType() {
         const accountType = document.getElementById('accountType').value;
 
-        const idNumberField = document.getElementById('idNumberField');
         const campusField = document.getElementById('campusField');
         const collegeField = document.getElementById('collegeField');
         const courseField = document.getElementById('courseField');
 
-        idNumberField.style.display = 'block';
         campusField.style.display = 'block';
         collegeField.style.display = 'block';
         courseField.style.display = 'block';
 
         if (accountType === 'Faculty') {
-            idNumberField.style.display = 'none';
             courseField.style.display = 'none';
         } else if (accountType === 'Non-academic') {
-            idNumberField.style.display = 'none';
             campusField.style.display = 'none';
             collegeField.style.display = 'none';
             courseField.style.display = 'none';
@@ -349,13 +344,14 @@ async function registerPatient() {
         address: getValue('#address', page1Form),
         age: getValue('#age', page1Form),
         sex: getValue('select', page1Form),
+        contact_number: getValue('input[placeholder="Contact No"]', page1Form),
         date_of_birth: getValue('#date_of_birth', page1Form),
         campus: getValue('input[placeholder="Campus"]', page2Form),
         college: getValue('input[placeholder="College/Office"]', page2Form),
         course_year: getValue('input[placeholder="Course & Year"]', page2Form),
         emergency_contact: getValue('input[placeholder="Contact Name"]', page2Form),
         relation: getValue('input[placeholder="Relation"]', page2Form),
-        contact_number: getValue('input[placeholder="Contact No"]', page2Form),
+        emergency_contact_number: getValue('input[placeholder="Contact No"]', page2Form),
         blood_type: document.getElementById('blood_type').value.trim(),
         allergies: getValue('textarea', page2Form),
         role: getValue('#accountType', page2Form),
