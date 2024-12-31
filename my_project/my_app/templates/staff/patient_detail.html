@@ -44,7 +44,7 @@
             <p><strong>🏫 Campus:</strong> {{ patient.campus|default:'N/A' }}</p>
             <p><strong>🏢 College:</strong> {{ patient.college|default:'N/A' }}</p>
             <p><strong>📚 Course & Year:</strong> {{ patient.course_year|default:'N/A' }}</p>
-            <p><strong>📞 Emergency Contact:</strong> {{ patient.emergency_contact }} ({{ patient.relation }})</p>
+            <p class="col-span-3"><strong>📞 Emergency Contact:</strong> {{ patient.emergency_contact }}  ({{ patient.relation }}) | {{ patient.emergency_contact_number }}</p>
         </div>
     </div>
 

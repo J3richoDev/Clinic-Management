@@ -130,7 +130,7 @@ class PatientAccount(models.Model):
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True, blank=True, null=True)
     address = models.TextField(blank=False, null=False)
-    contact_number = models.CharField(max_length=15, unique=True, blank=True, null=True)
+    contact_number = models.CharField(max_length=15, blank=True, null=True)
     age = models.PositiveIntegerField()
     sex = models.CharField(max_length=10)
     campus = models.CharField(max_length=50, blank=True, null=True)

@@ -461,11 +461,16 @@ def add_patient(request):
     if request.method == "POST":
         form = PatientForm(request.POST)
         if form.is_valid():
-            patient = form.save(commit=False)
-            patient.added_by = request.user  # Assuming logged-in user is the staff member
-            patient.save()
-
-            return redirect('staff_dashboard')  # Default fallback if no role matches
+            contact_number = form.cleaned_data.get('contact_number')
+            
+            # Check if the contact number already exists in PatientAccount
+            if PatientAccount.objects.filter(contact_number=contact_number).exists():
+                form.add_error('contact_number', 'A patient with this contact number already exists.')
+            else:
+                patient = form.save(commit=False)
+                patient.added_by = request.user  # Assuming logged-in user is the staff member
+                patient.save()
+                return redirect('staff_dashboard')  # Redirect to staff dashboard after saving
     else:
         form = PatientForm()
 
@@ -637,10 +642,32 @@ from .serializers import PatientAccountSerializer
 from rest_framework.permissions import AllowAny
 
 class PatientRegistrationAPIView(generics.CreateAPIView):
-
+    """
+    Handles patient registration with improved validation error responses.
+    """
     queryset = PatientAccount.objects.all()
     serializer_class = PatientAccountSerializer
     permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response(
+                {"message": "Registration successful!"},
+                status=status.HTTP_201_CREATED
+            )
+        
+        # Handle validation errors explicitly
+        error_response = {}
+        for field, errors in serializer.errors.items():
+            error_response[field] = errors[0] if isinstance(errors, list) else errors
+        
+        return Response(
+            {"errors": error_response},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 from django.shortcuts import render, redirect

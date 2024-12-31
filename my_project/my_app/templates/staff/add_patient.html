@@ -16,49 +16,100 @@
         <div>
             <label for="id_first_name" class="block text-sm font-medium text-gray-700">First Name</label>
             {{ form.first_name|attr:"class:input input-bordered w-full" }}
+            {% if form.first_name.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.first_name.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Middle Name -->
         <div>
             <label for="id_middle_name" class="block text-sm font-medium text-gray-700">Middle Name</label>
             {{ form.middle_name|attr:"class:input input-bordered w-full" }}
+            {% if form.middle_name.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.middle_name.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Last Name -->
         <div>
             <label for="id_last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
             {{ form.last_name|attr:"class:input input-bordered w-full" }}
+            {% if form.last_name.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.last_name.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Sex -->
         <div>
             <label for="id_sex" class="block text-sm font-medium text-gray-700">Sex</label>
             {{ form.sex|attr:"class:select select-bordered w-full" }}
+            {% if form.sex.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.sex.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Role -->
         <div>
             <label for="id_role" class="block text-sm font-medium text-gray-700">Role</label>
             {{ form.role|attr:"class:input input-bordered w-full" }}
+            {% if form.role.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.role.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Date of Birth -->
         <div>
             <label for="id_date_of_birth" class="block text-sm font-medium text-gray-700">Date of Birth</label>
             {{ form.date_of_birth|attr:"class:input input-bordered w-full" }}
+            {% if form.date_of_birth.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.date_of_birth.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Age -->
         <div>
             <label for="id_age" class="block text-sm font-medium text-gray-700">Age</label>
             {{ form.age|attr:"class:input input-bordered w-full" }}
+            {% if form.age.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.age.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
 
         <!-- Contact Number -->
         <div>
             <label for="id_contact_number" class="block text-sm font-medium text-gray-700">Contact Number</label>
             {{ form.contact_number|attr:"class:input input-bordered w-full" }}
+            {% if form.contact_number.errors %}
+                <p class="text-red-500 text-sm mt-1">
+                    {{ form.contact_number.errors|striptags }}
+                </p>
+            {% endif %}
         </div>
+
+        {% if form.non_field_errors %}
+            <div class="col-span-2 bg-red-100 text-red-800 p-3 rounded-md mb-4">
+                <strong>Error:</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
 
         <!-- Submit Button -->
         <div class="col-span-2 flex justify-end mt-4">

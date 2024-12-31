@@ -24,9 +24,10 @@ class PatientAccountSerializer(serializers.ModelSerializer):
         age = validated_data.get('age')
         sex = validated_data.get('sex')
         date_of_birth = validated_data.get('date_of_birth')
+        contact_number = validated_data.get('contact_number')
         password = validated_data.pop('password', None)
 
-        # Search for matching patient details
+        # Search for a matching patient based on identity details
         matching_patient = PatientAccount.objects.filter(
             first_name=first_name,
             last_name=last_name,
@@ -36,7 +37,17 @@ class PatientAccountSerializer(serializers.ModelSerializer):
         ).first()
 
         if matching_patient:
-            # Update the existing patient's details
+            # If the contact number is the same, retain the existing contact number
+            if contact_number == matching_patient.contact_number:
+                validated_data.pop('contact_number', None)  # Prevent overriding the contact number
+
+            # If the contact number is different, validate uniqueness
+            elif PatientAccount.objects.filter(contact_number=contact_number).exclude(id=matching_patient.id).exists():
+                raise serializers.ValidationError({
+                    "contact_number": "This contact number is already associated with another patient."
+                })
+
+            # Update other patient details
             for key, value in validated_data.items():
                 setattr(matching_patient, key, value)
             if password:
@@ -44,12 +55,17 @@ class PatientAccountSerializer(serializers.ModelSerializer):
             matching_patient.save()
             return matching_patient
 
-        # Create a new patient record if no match is found
+        # Check if contact number already exists for new records
+        if contact_number and PatientAccount.objects.filter(contact_number=contact_number).exists():
+            raise serializers.ValidationError({
+                "contact_number": "This contact number is already associated with another patient."
+            })
+
+        # Create a new patient record if no conflict exists
         if password:
             validated_data['password'] = make_password(password)
 
         return super().create(validated_data)
-    
 
     # my_app/serializers.py
 

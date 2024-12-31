@@ -329,7 +329,7 @@ function getValue(selector, parent = document) {
 }
 function displayError(message, elementId) {
     const errorElement = document.getElementById(elementId);
-    errorElement.textContent = message;
+    errorElement.textContent = message || '';
 }
 
 async function registerPatient() {
@@ -368,20 +368,32 @@ async function registerPatient() {
             body: JSON.stringify(formData),
         });
 
+        const responseData = await response.json();
+
         if (response.ok) {
             alert('Registration Successful!');
             window.location.href = `${window.location.origin}/my_app/patient/login`;
         } else {
-            const errorData = await response.json();
-            console.error('Error:', errorData);
-            displayError(errorData.message || 'Registration failed. Please try again.', 'errorMessagePage2');
+            // Display field-specific errors
+            if (responseData.errors) {
+                if (responseData.errors.contact_number) {
+                    displayError(responseData.errors.contact_number, 'errorMessagePage1');
+                } else if (responseData.errors.email) {
+                    displayError(responseData.errors.email, 'errorMessagePage1');
+                } else if (responseData.errors.non_field_errors) {
+                    displayError(responseData.errors.non_field_errors, 'errorMessagePage1');
+                } else {
+                    displayError('Please fix the errors and try again.', 'errorMessagePage2');
+                }
+            } else {
+                displayError('Registration failed. Please try again.', 'errorMessagePage2');
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        displayError('An error occurred while submitting the form.', 'errorMessagePage2');
+        displayError('An unexpected error occurred. Please try again later.', 'errorMessagePage2');
     }
 }
-
 // Event Listener for Form Submission
 document.querySelector('#registrationFormPage2').addEventListener('submit', function(event) {
     event.preventDefault();

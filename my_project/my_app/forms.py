@@ -49,8 +49,8 @@ class CustomPasswordChangeForm(PasswordChangeForm):
 
 class PatientForm(forms.ModelForm):
     SEX_CHOICES = [
-        ('male', 'Male'),
-        ('female', 'Female'),
+        ('Male', 'Male'),
+        ('Female', 'Female'),
     ]
 
     STUDENT = 'Student'
@@ -63,6 +63,7 @@ class PatientForm(forms.ModelForm):
         (NON_ACADEMIC, 'Non-academic'),
     ]
     
+    # Form Fields with Widgets
     sex = forms.ChoiceField(
         choices=SEX_CHOICES, 
         widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Sex'})
@@ -92,7 +93,6 @@ class PatientForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'placeholder': 'Enter Contact Number'})
     )
     
-    
     class Meta:
         model = PatientAccount
         fields = [
@@ -105,14 +105,42 @@ class PatientForm(forms.ModelForm):
             'age', 
             'contact_number'
         ]
-    
+
     def clean_age(self):
+        """Auto-calculate age from date_of_birth."""
         dob = self.cleaned_data.get('date_of_birth')
         if dob:
             today = date.today()
             age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
             return age
         return None
+
+    def clean(self):
+        """Validate duplicate contact number and duplicate patient details."""
+        cleaned_data = super().clean()
+        first_name = cleaned_data.get('first_name')
+        last_name = cleaned_data.get('last_name')
+        role = cleaned_data.get('role')
+        date_of_birth = cleaned_data.get('date_of_birth')
+        contact_number = cleaned_data.get('contact_number')
+
+        # Validate Duplicate Contact Number
+        if contact_number and PatientAccount.objects.filter(contact_number=contact_number).exists():
+            self.add_error('contact_number', 'A patient with this contact number already exists.')
+
+        # Validate Duplicate First Name, Last Name, Role, and DOB
+        if first_name and last_name and role and date_of_birth:
+            if PatientAccount.objects.filter(
+                first_name=first_name,
+                last_name=last_name,
+                role=role,
+                date_of_birth=date_of_birth
+            ).exists():
+                raise forms.ValidationError(
+                    "A patient with the same First Name, Last Name, Role, and Date of Birth already exists."
+                )
+        
+        return cleaned_data
 
 from django import forms
 from .models import MedicalRecord
