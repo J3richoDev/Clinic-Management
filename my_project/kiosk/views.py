@@ -38,6 +38,19 @@ def ticket_creation(request, ticket_type):
             # ✅ Set scheduled_time to now() if it's a walk-in appointment
             if ticket_type.upper() == 'WALKIN':
                 ticket.scheduled_time = now()
+            
+            # Handle ticket label logic based on transaction_group
+            group = ticket.transaction_group
+            being_served_exists = Ticket.objects.filter(label="Being Served", transaction_group=group).exists()
+            next_exists = Ticket.objects.filter(label="Next", transaction_group=group).exists()
+
+            if not being_served_exists:
+                ticket.label = "Being Served"
+            elif being_served_exists and not next_exists:
+                ticket.label = "Next"
+            else:
+                # If both exist, leave label unchanged
+                pass
 
             ticket.save()
             return render(request, 'ticket_success.html', {

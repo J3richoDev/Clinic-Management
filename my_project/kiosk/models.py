@@ -48,6 +48,7 @@ class Ticket(models.Model):
 
 
     ticket_type = models.CharField(max_length=20, choices=TICKET_TYPE_CHOICES)
+    label = models.CharField(max_length=20, blank=True, null=True, default='In Queue')
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='STUDENT')
     special_tag = models.CharField(max_length=20, choices=SPECIAL_TAG_CHOICES, default='NONE')

@@ -233,8 +233,8 @@ def staff_dashboard(request):
 
     # Metrics
     total_patients_today = MedicalRecord.objects.filter(attending_staff=user, date_time__date=today).count()
-    pending_appointments = Ticket.objects.filter(transaction_group=user.role.upper(), scheduled_time__date=today, checked_in=False).count()
-    current_queue_status = Ticket.objects.filter(transaction_group=user.role.upper(), scheduled_time__date=today, checked_in=False).count()
+    pending_appointments = Ticket.objects.filter(transaction_group=user.role.upper(), ticket_type='APPOINTMENT', checked_in=False).count()
+    current_queue_status = Ticket.objects.filter(transaction_group=user.role.upper(), checked_in=False).count()
 
     # **4. Average Consultation Duration (Using Raw SQL Query for SQLite)**
     consultation_duration = (
@@ -478,188 +478,244 @@ def add_patient(request):
 
 @login_required
 def queue_view(request):
-    # Determine the transaction group based on the user's role
-    if request.user.role in ['nurse', 'dentist', 'physician']:
-        transaction_group = request.user.role.upper()
-    else:
+    if request.user.role not in ['nurse', 'dentist', 'physician']:
         return HttpResponseForbidden("You are not authorized to access this page.")
-
+    
     current_date = localtime(now()).date()
 
     # Fetch tickets for the user's transaction group
     tickets = Ticket.objects.filter(
-        transaction_group=transaction_group,
+        transaction_group=request.user.role.upper(),
         checked_in=False,
         scheduled_time__date=current_date
     )
 
-    # Define role priorities
+    # Priority Definitions
     role_priority = {
         'PERSONNEL': 1,
-        'FACULTY': 1,
-        'STUDENT': 2
+        'FACULTY': 2,
+        'STUDENT': 3
     }
 
+    special_tag_priority = {
+        'PWD': 1,
+        'Senior Citizen': 2
+    }
+
+    def sort_walkin(ticket):
+        """Sorting logic for walk-in tickets."""
+        # Special Tag Priority
+        special_tag_rank = special_tag_priority.get(ticket.special_tag, 99)  # Default to 99 if no special tag
+        # Role Priority
+        role_rank = role_priority.get(ticket.role, 4)  # Default to 4 if role is undefined
+        # Scheduled Time
+        scheduled_time = ticket.scheduled_time or now()
+        
+        return (
+            special_tag_rank,  # Prioritize special tag
+            role_rank,  # Then prioritize role
+            scheduled_time  # Lastly, prioritize by scheduled time
+        )
+
     # Separate tickets into categories
-    being_served_ticket = None
+    being_served = None
+    next_ticket = None
     appointment_tickets = []
     walkin_tickets = []
 
     for ticket in tickets:
-        if getattr(ticket, 'label', None) == "Being Served":
-            being_served_ticket = ticket
+        if ticket.label == "Being Served":
+            being_served = ticket
+        elif ticket.label == "Next":
+            next_ticket = ticket
         elif ticket.ticket_type == 'APPOINTMENT':
             appointment_tickets.append(ticket)
         else:
             walkin_tickets.append(ticket)
 
-    # Sort APPOINTMENT tickets by scheduled_time
-    appointment_tickets = sorted(appointment_tickets, key=lambda t: t.scheduled_time or now())
+    # Sort appointment and walk-in tickets
+    appointment_tickets.sort(key=lambda t: t.scheduled_time or now())
+    walkin_tickets.sort(key=sort_walkin)
 
-    # Sort WALKIN tickets by tag, scheduled time, and role priority
-    def walkin_sort_key(ticket):
-        special_tag_priority = ticket.special_tag in ['PWD', 'Senior Citizen']
-        scheduled_time = ticket.scheduled_time or now()
-        role_rank = role_priority.get(ticket.role, 4)  # Default to 4 if undefined
+    # Prepare the final queue
+    final_queue = []
 
-        return (
-            not special_tag_priority,  # PWD and Senior Citizen first
-            scheduled_time,  # Earlier scheduled time comes first
-            role_rank  # PERSONNEL > FACULTY > STUDENT
-        )
+    # Step 1: Always preserve 'Being Served' and 'Next'
+    if being_served:
+        being_served.label = "Being Served"
+        final_queue.append(being_served)
+    if next_ticket:
+        next_ticket.label = "Next"
+        final_queue.append(next_ticket)
 
-    walkin_tickets = sorted(walkin_tickets, key=walkin_sort_key)
-
-    # Combine all tickets
-    final_tickets = []
-
-    if being_served_ticket:
-        being_served_ticket.label = "Being Served"
-        final_tickets.append(being_served_ticket)
-
-    # Apply labels to APPOINTMENT tickets
-    appointment_label_applied = False
-    for idx, ticket in enumerate(appointment_tickets):
-        if not being_served_ticket and idx == 0:
-            ticket.label = "Being Served"
-        elif not appointment_label_applied:
-            ticket.label = "Next"
-            appointment_label_applied = True
-        else:
+    # Step 2: Process remaining appointment tickets
+    for ticket in appointment_tickets:
+        if ticket != being_served and ticket != next_ticket:
             ticket.label = "In Queue"
+            final_queue.append(ticket)
 
-        ticket.transaction_time_local = localtime(ticket.scheduled_time)
-        final_tickets.append(ticket)
-
-    # Apply labels to WALKIN tickets
-    walkin_label_applied = False
-    for idx, ticket in enumerate(walkin_tickets):
-        if not being_served_ticket and not appointment_tickets and idx == 0:
-            ticket.label = "Being Served"
-        elif not appointment_label_applied and not walkin_label_applied:
-            ticket.label = "Next"
-            walkin_label_applied = True
-        else:
+    # Step 3: Process remaining walk-in tickets
+    for ticket in walkin_tickets:
+        if ticket != being_served and ticket != next_ticket:
             ticket.label = "In Queue"
+            final_queue.append(ticket)
 
-        ticket.transaction_time_local = localtime(ticket.scheduled_time)
-        final_tickets.append(ticket)
+    # Step 4: Ensure no ticket overwrites 'Being Served' or 'Next'
+    if not being_served and final_queue:
+        final_queue[0].label = "Being Served"
+    if not next_ticket and len(final_queue) > 1:
+        final_queue[1].label = "Next"
 
-    return render(request, 'staff/queue.html', {'tickets': final_tickets})
+    return render(request, 'staff/queue.html', {'tickets': final_queue})
+
+
 @login_required
 def queue_display(request):
-    # Fetch tickets currently being served and next in line
-    if request.user.role in ['nurse', 'dentist', 'physician']:
-        transaction_group = request.user.role.upper()
-    else:
+    if request.user.role not in ['nurse', 'dentist', 'physician']:
         return HttpResponseForbidden("You are not authorized to access this page.")
-
+    
     current_date = localtime(now()).date()
 
     # Fetch tickets for the user's transaction group
     tickets = Ticket.objects.filter(
-        transaction_group=transaction_group,
+        transaction_group=request.user.role.upper(),
         checked_in=False,
         scheduled_time__date=current_date
-    ).order_by(
-        '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'scheduled_time'  # Oldest first
     )
 
-    # Annotate each ticket with a label
-    for idx, ticket in enumerate(tickets):
-        if idx == 0:
-            ticket.label = "Being Served"
-        elif idx == 1:
-            ticket.label = "Next"
+    # Priority Definitions
+    role_priority = {
+        'PERSONNEL': 1,
+        'FACULTY': 2,
+        'STUDENT': 3
+    }
+
+    special_tag_priority = {
+        'PWD': 1,
+        'Senior Citizen': 2
+    }
+
+    def sort_walkin(ticket):
+        """Sorting logic for walk-in tickets."""
+        # Special Tag Priority
+        special_tag_rank = special_tag_priority.get(ticket.special_tag, 99)  # Default to 99 if no special tag
+        # Role Priority
+        role_rank = role_priority.get(ticket.role, 4)  # Default to 4 if role is undefined
+        # Scheduled Time
+        scheduled_time = ticket.scheduled_time or now()
+        
+        return (
+            special_tag_rank,  # Prioritize special tag
+            role_rank,  # Then prioritize role
+            scheduled_time  # Lastly, prioritize by scheduled time
+        )
+
+    # Separate tickets into categories
+    being_served = None
+    next_ticket = None
+    appointment_tickets = []
+    walkin_tickets = []
+
+    for ticket in tickets:
+        if ticket.label == "Being Served":
+            being_served = ticket
+        elif ticket.label == "Next":
+            next_ticket = ticket
+        elif ticket.ticket_type == 'APPOINTMENT':
+            appointment_tickets.append(ticket)
         else:
+            walkin_tickets.append(ticket)
+
+    # Sort appointment and walk-in tickets
+    appointment_tickets.sort(key=lambda t: t.scheduled_time or now())
+    walkin_tickets.sort(key=sort_walkin)
+
+    # Prepare the final queue
+    final_queue = []
+
+    # Step 1: Always preserve 'Being Served' and 'Next'
+    if being_served:
+        being_served.label = "Being Served"
+        final_queue.append(being_served)
+    if next_ticket:
+        next_ticket.label = "Next"
+        final_queue.append(next_ticket)
+
+    # Step 2: Process remaining appointment tickets
+    for ticket in appointment_tickets:
+        if ticket != being_served and ticket != next_ticket:
             ticket.label = "In Queue"
+            final_queue.append(ticket)
 
-        # Localize transaction time for display
-        ticket.transaction_time_local = localtime(ticket.scheduled_time)
+    # Step 3: Process remaining walk-in tickets
+    for ticket in walkin_tickets:
+        if ticket != being_served and ticket != next_ticket:
+            ticket.label = "In Queue"
+            final_queue.append(ticket)
 
-        # Optional: Truncate details for "Other" transaction types
-        if ticket.transaction_type == "Other" and ticket.details:
-            ticket.truncated_details = ticket.details[:15] + "..."  # Show first 15 characters with "..."
-        else:
-            ticket.truncated_details = ticket.get_transaction_type_display()
+    # Step 4: Ensure no ticket overwrites 'Being Served' or 'Next'
+    if not being_served and final_queue:
+        final_queue[0].label = "Being Served"
+    if not next_ticket and len(final_queue) > 1:
+        final_queue[1].label = "Next"
 
-    return render(request, 'staff/queue_display.html', {'tickets': tickets})
+    return render(request, 'staff/queue_display.html', {'tickets': final_queue})
 
 @login_required
 def next_patient(request):
-    # Determine the transaction group based on the user's role
-    if request.user.role in ['nurse', 'dentist', 'physician']:
-        transaction_group = request.user.role.upper()
-    else:
+    if request.user.role not in ['nurse', 'dentist', 'physician']:
         return HttpResponseForbidden("You are not authorized to perform this action.")
 
-    # Fetch the queue for this transaction group
-    tickets = Ticket.objects.filter(
-        transaction_group=transaction_group,
+    # Define role priority mapping
+    role_priority = {
+        'PERSONNEL': 1,
+        'FACULTY': 2,
+        'STUDENT': 3
+    }
+
+    # Custom sorting function
+    def ticket_sort_key(ticket):
+        special_tag_priority = ticket.special_tag in ['PWD', 'Senior Citizen']
+        role_rank = role_priority.get(ticket.role, 4)  # Default rank 4 if role is undefined
+        return (
+            not special_tag_priority,  # Prioritize special tags
+            role_rank,  # Prioritize role (PERSONNEL > FACULTY > STUDENT)
+            ticket.scheduled_time or now()  # Prioritize by scheduled time
+        )
+
+    # Fetch all active tickets excluding 'Being Served' and 'Next'
+    remaining_tickets = Ticket.objects.filter(
+        transaction_group=request.user.role.upper(),
         checked_in=False
-    ).order_by(
-        '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'scheduled_time'  # Oldest first
+    ).exclude(
+        label__in=["Being Served", "Next"]
     )
 
-    if tickets.exists():
-        # Mark the current "Being Served" ticket as checked-in
-        current_ticket = tickets.first()
-        current_ticket.checked_in = True
-        current_ticket.checked_in_time = now()
-        current_ticket.save()
+    # Apply sorting logic
+    sorted_tickets = sorted(remaining_tickets, key=ticket_sort_key)
 
-        # Logically, the next ticket in the queue will become "Being Served"
-        next_ticket = tickets[1] if len(tickets) > 1 else None
-        if next_ticket:
-            next_ticket.label = "Being Served"
+    # Step 1: Handle 'Being Served' → Mark as 'Done'
+    being_served_ticket = Ticket.objects.filter(label="Being Served").first()
+    if being_served_ticket:
+        being_served_ticket.label = "Done"
+        being_served_ticket.checked_in = True
+        being_served_ticket.checked_in_time = now()
+        being_served_ticket.save()
+
+    # Step 2: Promote 'Next' → 'Being Served'
+    next_ticket = Ticket.objects.filter(label="Next").first()
+    if next_ticket:
+        next_ticket.label = "Being Served"
+        next_ticket.save()
+
+    # Step 3: Promote the First Remaining Ticket → 'Next'
+    if sorted_tickets:
+        third_ticket = sorted_tickets[0]
+        third_ticket.label = "Next"
+        third_ticket.save()
 
     return redirect('queue')
 
-# Reusable helper function for dashboard logic
-def render_staff_home(request, template_name, transaction_group):
-    # Real-time statistics
-    total_patients = PatientAccount.objects.count()
-    today_appointments = Ticket.objects.filter(
-        scheduled_time__date=now().date(),
-        transaction_group=transaction_group
-    ).count()
-
-    # Patient demographics
-    patient_roles = PatientAccount.objects.values('role').annotate(total=Count('id'))
-
-    # Clinic performance insights
-    total_tickets = Ticket.objects.filter(transaction_group=transaction_group).count()
-
-    # Context to pass to templates
-    context = {
-        'total_patients': total_patients,
-        'today_appointments': today_appointments,
-        'patient_roles': patient_roles,
-        'total_tickets': total_tickets,
-    }
-    return render(request, template_name, context)
 
 class DashboardStatsAPIView(APIView):
     """
