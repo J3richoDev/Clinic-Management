@@ -26,16 +26,27 @@
     </div>
     <div class="grid grid-cols-2 gap-4 mb-4">
         {% for ticket in tickets|slice:":2" %}
-            <div class="card bg-white shadow-md rounded-md border {% if ticket.label == 'Being Served' %}border-red-500{% elif ticket.label == 'Next' %}border-yellow-500{% else %}border-gray-300{% endif %}">
+            <div class="relative group card bg-white shadow-md rounded-md border {% if ticket.label == 'Being Served' %}border-red-500{% elif ticket.label == 'Next' %}border-yellow-500{% else %}border-gray-300{% endif %}">
                 <div class="card-body flex justify-between items-center">
                     <div class="text-center">
                         <h2 class="text-4xl font-semibold">{{ ticket.queue_number }}</h2>
                         <h2 class="text-lg font-semibold">{{ ticket.transaction_type }}</h2>
                         {% if ticket.special_tag and ticket.special_tag != "NONE" %}
-        <p class="text-lg font-semibold">{{ ticket.special_tag }}</p>
-    {% endif %}
-                        <h2 class="text-lg  font-semibold">{{ ticket.ticket_type }}</h2>
-                        <p class="text-gray-600 text-sm">🕒 {{ ticket.scheduled_time }}</p>
+                            <p class="text-lg font-semibold">
+                                {% if ticket.special_tag == "SENIOR_CITIZEN" %}
+                                    SENIOR CITIZEN
+                                {% else %}
+                                    {{ ticket.special_tag }}
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                        <h2 class="text-lg font-semibold">{{ ticket.ticket_type }}</h2>
+                        <p class="text-gray-600 text-sm">
+                            {% if ticket.ticket_type != "WALKIN" %}
+                                🕒 {{ ticket.scheduled_time }}
+                            {% endif %}
+                        </p>
+                        
                         <p class="text-gray-600 text-sm">{{ ticket.role }}</p>
                     </div>
                     <div>
@@ -48,21 +59,38 @@
                         {% endif %}
                     </div>
                 </div>
+                {% if ticket.details %}
+                <!-- Tooltip for Details -->
+                <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-sm rounded-lg px-4 py-2 z-50 whitespace-nowrap shadow-lg">
+                    {{ ticket.details }}
+                </div>
+                {% endif %}
             </div>
         {% endfor %}
     </div>
     <div class="grid grid-cols-4 gap-4 mb-4">
         {% for ticket in tickets|slice:"2:" %}
-            <div class="card bg-white shadow-md rounded-md border {% if ticket.label == 'Being Served' %}border-red-500{% elif ticket.label == 'Next' %}border-yellow-500{% else %}border-gray-300{% endif %}">
+            <div class="relative group card bg-white shadow-md rounded-md border {% if ticket.label == 'Being Served' %}border-red-500{% elif ticket.label == 'Next' %}border-yellow-500{% else %}border-gray-300{% endif %}">
                 <div class="card-body flex justify-between items-center">
                     <div class="text-center">
                         <h2 class="text-4xl font-semibold">{{ ticket.queue_number }}</h2>
                         <h2 class="text-lg font-semibold">{{ ticket.transaction_type }}</h2>
                         {% if ticket.special_tag and ticket.special_tag != "NONE" %}
-        <p class="text-lg font-semibold">{{ ticket.special_tag }}</p>
-    {% endif %}
+                            <p class="text-lg font-semibold">
+                                {% if ticket.special_tag == "SENIOR_CITIZEN" %}
+                                    SENIOR CITIZEN
+                                {% else %}
+                                    {{ ticket.special_tag }}
+                                {% endif %}
+                            </p>
+                        {% endif %}
                         <h2 class="text-lg font-semibold">{{ ticket.ticket_type }}</h2>
-                        <p class="text-gray-600 text-sm">🕒 {{ ticket.scheduled_time }}</p>
+                        <p class="text-gray-600 text-sm">
+                            {% if ticket.ticket_type != "WALKIN" %}
+                                🕒 {{ ticket.scheduled_time }}
+                            {% endif %}
+                        </p>
+                        
                         <p class="text-gray-600 text-sm">{{ ticket.role }}</p>
                     </div>
                     <div>
@@ -75,6 +103,15 @@
                         {% endif %}
                     </div>
                 </div>
+                {% if ticket.details %}
+                <!-- Tooltip for Details Inside the Card -->
+                <div class="absolute inset-0 bg-black bg-opacity-90 text-white text-sm rounded-md px-4 py-2 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-center transition-all duration-300 z-10 whitespace-pre-wrap overflow-auto">
+                    <h3 class="font-bold text-lg mb-2">Ticket Details</h3>
+                    <p class="text-sm leading-relaxed max-h-48 overflow-y-auto px-2">{{ ticket.details }}</p>
+                </div>
+                {% endif %}
+                
+                
             </div>
         {% endfor %}
     </div>

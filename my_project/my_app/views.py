@@ -500,54 +500,72 @@ def queue_view(request):
         'STUDENT': 2
     }
 
-    # Separate "Being Served" ticket (if exists)
+    # Separate tickets into categories
     being_served_ticket = None
-    remaining_tickets = []
+    appointment_tickets = []
+    walkin_tickets = []
 
     for ticket in tickets:
-        if hasattr(ticket, 'label') and ticket.label == "Being Served":
+        if getattr(ticket, 'label', None) == "Being Served":
             being_served_ticket = ticket
+        elif ticket.ticket_type == 'APPOINTMENT':
+            appointment_tickets.append(ticket)
         else:
-            remaining_tickets.append(ticket)
+            walkin_tickets.append(ticket)
 
-    # Apply custom sorting to remaining tickets
-    def ticket_sort_key(ticket):
+    # Sort APPOINTMENT tickets by scheduled_time
+    appointment_tickets = sorted(appointment_tickets, key=lambda t: t.scheduled_time or now())
+
+    # Sort WALKIN tickets by tag, scheduled time, and role priority
+    def walkin_sort_key(ticket):
         special_tag_priority = ticket.special_tag in ['PWD', 'Senior Citizen']
+        scheduled_time = ticket.scheduled_time or now()
+        role_rank = role_priority.get(ticket.role, 4)  # Default to 4 if undefined
+
         return (
-            not special_tag_priority,  # Prioritize special_tag=True (PWD/Senior Citizen)
-            role_priority.get(ticket.role, 4),  # Role priority (default 4)
-            ticket.scheduled_time  # Sort by oldest scheduled time
+            not special_tag_priority,  # PWD and Senior Citizen first
+            scheduled_time,  # Earlier scheduled time comes first
+            role_rank  # PERSONNEL > FACULTY > STUDENT
         )
 
-    sorted_tickets = sorted(remaining_tickets, key=ticket_sort_key)
+    walkin_tickets = sorted(walkin_tickets, key=walkin_sort_key)
 
-    # Combine the "Being Served" ticket at the top, followed by sorted tickets
+    # Combine all tickets
     final_tickets = []
+
     if being_served_ticket:
         being_served_ticket.label = "Being Served"
         final_tickets.append(being_served_ticket)
 
-    for idx, ticket in enumerate(sorted_tickets):
-        if idx == 0 and not being_served_ticket:
+    # Apply labels to APPOINTMENT tickets
+    appointment_label_applied = False
+    for idx, ticket in enumerate(appointment_tickets):
+        if not being_served_ticket and idx == 0:
             ticket.label = "Being Served"
-        elif idx == 1 or (being_served_ticket and idx == 0):
+        elif not appointment_label_applied:
             ticket.label = "Next"
+            appointment_label_applied = True
         else:
             ticket.label = "In Queue"
 
-        # Localize transaction time for display
         ticket.transaction_time_local = localtime(ticket.scheduled_time)
+        final_tickets.append(ticket)
 
-        # Optional: Truncate details for "Other" transaction types
-        if ticket.transaction_type == "Other" and ticket.details:
-            ticket.truncated_details = ticket.details[:15] + "..." if len(ticket.details) > 15 else ticket.details
+    # Apply labels to WALKIN tickets
+    walkin_label_applied = False
+    for idx, ticket in enumerate(walkin_tickets):
+        if not being_served_ticket and not appointment_tickets and idx == 0:
+            ticket.label = "Being Served"
+        elif not appointment_label_applied and not walkin_label_applied:
+            ticket.label = "Next"
+            walkin_label_applied = True
         else:
-            ticket.truncated_details = ticket.get_transaction_type_display()
+            ticket.label = "In Queue"
 
+        ticket.transaction_time_local = localtime(ticket.scheduled_time)
         final_tickets.append(ticket)
 
     return render(request, 'staff/queue.html', {'tickets': final_tickets})
-
 @login_required
 def queue_display(request):
     # Fetch tickets currently being served and next in line
