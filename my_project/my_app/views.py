@@ -737,3 +737,37 @@ class AppointmentCreateAPIView(generics.CreateAPIView):
             return super().create(request, *args, **kwargs)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+from rest_framework.generics import ListAPIView
+from .models import PatientAccount
+from .serializers import PatientAccountSerializer
+
+class PatientAccountListView(ListAPIView):
+    """
+    API endpoint to list all PatientAccounts.
+    """
+    queryset = PatientAccount.objects.all()
+    serializer_class = PatientAccountSerializer
+
+
+class ValidatePatientDataView(APIView):
+    """
+    Validate duplicate email and contact number.
+    """
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        contact_number = request.data.get('contact_number')
+
+        errors = {}
+
+        if email and PatientAccount.objects.filter(email=email).exists():
+            errors['email'] = "This email is already in use."
+
+        if contact_number and PatientAccount.objects.filter(contact_number=contact_number).exists():
+            errors['contact_number'] = "This contact number is already in use."
+
+        if errors:
+            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"message": "Data is valid."}, status=status.HTTP_200_OK)
