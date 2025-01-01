@@ -115,7 +115,7 @@ def add_staff(request):
             base_email = (
                 f"{first_name.lower().replace(' ', '')}."
                 f"{last_name.lower().replace(' ', '')}."
-                f"{middle_initials}@buslu.edu.ph"
+                f"{middle_initials}@bulsu.edu.ph"
             ).strip(".")
 
             email = base_email
