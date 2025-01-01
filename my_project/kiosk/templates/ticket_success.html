@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +18,7 @@
             border-radius: 5px;
             background-color: #f8f9fa;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
 
         .ticket h2 {
@@ -26,6 +28,11 @@
 
         .ticket p {
             margin: 5px 0;
+        }
+
+        .ticket img.logo {
+            max-width: 100px; /* Adjust logo size */
+            margin-bottom: 15px;
         }
 
         /* Print-specific styles */
@@ -57,6 +64,9 @@
 <body>
     <div class="container text-center">
         <div class="ticket">
+            <!-- Logo Section -->
+            <img src="{% static 'logo/bnw.png' %}" alt="Logo" class="logo">
+            
             <h2 class="mb-3">Your Ticket</h2>
             <p><strong>Queue Number:</strong> {{ ticket.queue_number }}</p>
             <p><strong>Transaction Type:</strong> {{ ticket.get_transaction_type_display }}</p>
@@ -68,6 +78,7 @@
             <p><strong>Details:</strong> {{ ticket.details }}</p>
             <p><strong>Transaction Time:</strong> {{ local_transaction_time }}</p>
         </div>
+        
         <!-- Button to Create Another Ticket -->
         <button onclick="location.href='{% url 'kiosk:ticket_selection' %}'" class="btn btn-primary mt-3">
             Create Another Ticket

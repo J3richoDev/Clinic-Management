@@ -228,8 +228,40 @@
 </div>
 
 <script>
+
+    async function validatePatientData(email, contact_number) {
+        try {
+            const response = await fetch('/my_app/api/patients/validate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ email, contact_number }),
+            });
     
-    function showPage2() {
+            const data = await response.json();
+    
+            if (!response.ok) {
+                if (data.errors.email) {
+                    displayError(data.errors.email, 'errorMessagePage1');
+                } 
+                if (data.errors.contact_number) {
+                    displayError(data.errors.contact_number, 'errorMessagePage1');
+                }
+                return false;
+            }
+    
+            return true;
+    
+        } catch (error) {
+            console.error('Validation error:', error);
+            displayError('Validation failed. Please try again.', 'errorMessagePage1');
+            return false;
+        }
+    }
+    
+    async function showPage2() {
         const formData = {
             first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
             last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
@@ -240,7 +272,7 @@
             confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
         };
     
-        // Basic validation
+        // ✅ Basic Validation
         if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password || !formData.contact_number) {
             displayError('All fields are required in Step 1!', 'errorMessagePage1');
             return;
@@ -263,7 +295,13 @@
             return;
         }
     
-        // Clear previous error and proceed
+        // ✅ Server-side Duplicate Validation
+        const isValid = await validatePatientData(formData.email, formData.contact_number);
+        if (!isValid) {
+            return;
+        }
+    
+        // ✅ Clear Errors and Proceed to Step 2
         displayError('', 'errorMessagePage1');
         document.getElementById('page1').classList.add('hidden');
         document.getElementById('page2').classList.remove('hidden');

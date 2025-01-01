@@ -491,31 +491,81 @@ def queue_view(request):
         transaction_group=transaction_group,
         checked_in=False,
         scheduled_time__date=current_date
-    ).order_by(
-        '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'scheduled_time'  # Oldest first
     )
 
-    # Annotate each ticket with a label
-    for idx, ticket in enumerate(tickets):
-        if idx == 0:
+    # Define role priorities
+    role_priority = {
+        'PERSONNEL': 1,
+        'FACULTY': 1,
+        'STUDENT': 2
+    }
+
+    # Separate tickets into categories
+    being_served_ticket = None
+    appointment_tickets = []
+    walkin_tickets = []
+
+    for ticket in tickets:
+        if getattr(ticket, 'label', None) == "Being Served":
+            being_served_ticket = ticket
+        elif ticket.ticket_type == 'APPOINTMENT':
+            appointment_tickets.append(ticket)
+        else:
+            walkin_tickets.append(ticket)
+
+    # Sort APPOINTMENT tickets by scheduled_time
+    appointment_tickets = sorted(appointment_tickets, key=lambda t: t.scheduled_time or now())
+
+    # Sort WALKIN tickets by tag, scheduled time, and role priority
+    def walkin_sort_key(ticket):
+        special_tag_priority = ticket.special_tag in ['PWD', 'Senior Citizen']
+        scheduled_time = ticket.scheduled_time or now()
+        role_rank = role_priority.get(ticket.role, 4)  # Default to 4 if undefined
+
+        return (
+            not special_tag_priority,  # PWD and Senior Citizen first
+            scheduled_time,  # Earlier scheduled time comes first
+            role_rank  # PERSONNEL > FACULTY > STUDENT
+        )
+
+    walkin_tickets = sorted(walkin_tickets, key=walkin_sort_key)
+
+    # Combine all tickets
+    final_tickets = []
+
+    if being_served_ticket:
+        being_served_ticket.label = "Being Served"
+        final_tickets.append(being_served_ticket)
+
+    # Apply labels to APPOINTMENT tickets
+    appointment_label_applied = False
+    for idx, ticket in enumerate(appointment_tickets):
+        if not being_served_ticket and idx == 0:
             ticket.label = "Being Served"
-        elif idx == 1:
+        elif not appointment_label_applied:
             ticket.label = "Next"
+            appointment_label_applied = True
         else:
             ticket.label = "In Queue"
 
-        # Localize transaction time for display
         ticket.transaction_time_local = localtime(ticket.scheduled_time)
+        final_tickets.append(ticket)
 
-        # Optional: Truncate details for "Other" transaction types
-        if ticket.transaction_type == "Other" and ticket.details:
-            ticket.truncated_details = ticket.details[:15] + "..."  # Show first 15 characters with "..."
+    # Apply labels to WALKIN tickets
+    walkin_label_applied = False
+    for idx, ticket in enumerate(walkin_tickets):
+        if not being_served_ticket and not appointment_tickets and idx == 0:
+            ticket.label = "Being Served"
+        elif not appointment_label_applied and not walkin_label_applied:
+            ticket.label = "Next"
+            walkin_label_applied = True
         else:
-            ticket.truncated_details = ticket.get_transaction_type_display()
+            ticket.label = "In Queue"
 
-    return render(request, 'staff/queue.html', {'tickets': tickets})
+        ticket.transaction_time_local = localtime(ticket.scheduled_time)
+        final_tickets.append(ticket)
 
+    return render(request, 'staff/queue.html', {'tickets': final_tickets})
 @login_required
 def queue_display(request):
     # Fetch tickets currently being served and next in line
@@ -737,3 +787,37 @@ class AppointmentCreateAPIView(generics.CreateAPIView):
             return super().create(request, *args, **kwargs)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+from rest_framework.generics import ListAPIView
+from .models import PatientAccount
+from .serializers import PatientAccountSerializer
+
+class PatientAccountListView(ListAPIView):
+    """
+    API endpoint to list all PatientAccounts.
+    """
+    queryset = PatientAccount.objects.all()
+    serializer_class = PatientAccountSerializer
+
+
+class ValidatePatientDataView(APIView):
+    """
+    Validate duplicate email and contact number.
+    """
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        contact_number = request.data.get('contact_number')
+
+        errors = {}
+
+        if email and PatientAccount.objects.filter(email=email).exists():
+            errors['email'] = "This email is already in use."
+
+        if contact_number and PatientAccount.objects.filter(contact_number=contact_number).exists():
+            errors['contact_number'] = "This contact number is already in use."
+
+        if errors:
+            return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"message": "Data is valid."}, status=status.HTTP_200_OK)
