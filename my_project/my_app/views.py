@@ -491,16 +491,46 @@ def queue_view(request):
         transaction_group=transaction_group,
         checked_in=False,
         scheduled_time__date=current_date
-    ).order_by(
-        '-special_tag',  # Higher priority (PWD/Senior Citizen) first
-        'scheduled_time'  # Oldest first
     )
 
-    # Annotate each ticket with a label
-    for idx, ticket in enumerate(tickets):
-        if idx == 0:
+    # Define role priorities
+    role_priority = {
+        'PERSONNEL': 1,
+        'FACULTY': 1,
+        'STUDENT': 2
+    }
+
+    # Separate "Being Served" ticket (if exists)
+    being_served_ticket = None
+    remaining_tickets = []
+
+    for ticket in tickets:
+        if hasattr(ticket, 'label') and ticket.label == "Being Served":
+            being_served_ticket = ticket
+        else:
+            remaining_tickets.append(ticket)
+
+    # Apply custom sorting to remaining tickets
+    def ticket_sort_key(ticket):
+        special_tag_priority = ticket.special_tag in ['PWD', 'Senior Citizen']
+        return (
+            not special_tag_priority,  # Prioritize special_tag=True (PWD/Senior Citizen)
+            role_priority.get(ticket.role, 4),  # Role priority (default 4)
+            ticket.scheduled_time  # Sort by oldest scheduled time
+        )
+
+    sorted_tickets = sorted(remaining_tickets, key=ticket_sort_key)
+
+    # Combine the "Being Served" ticket at the top, followed by sorted tickets
+    final_tickets = []
+    if being_served_ticket:
+        being_served_ticket.label = "Being Served"
+        final_tickets.append(being_served_ticket)
+
+    for idx, ticket in enumerate(sorted_tickets):
+        if idx == 0 and not being_served_ticket:
             ticket.label = "Being Served"
-        elif idx == 1:
+        elif idx == 1 or (being_served_ticket and idx == 0):
             ticket.label = "Next"
         else:
             ticket.label = "In Queue"
@@ -510,11 +540,13 @@ def queue_view(request):
 
         # Optional: Truncate details for "Other" transaction types
         if ticket.transaction_type == "Other" and ticket.details:
-            ticket.truncated_details = ticket.details[:15] + "..."  # Show first 15 characters with "..."
+            ticket.truncated_details = ticket.details[:15] + "..." if len(ticket.details) > 15 else ticket.details
         else:
             ticket.truncated_details = ticket.get_transaction_type_display()
 
-    return render(request, 'staff/queue.html', {'tickets': tickets})
+        final_tickets.append(ticket)
+
+    return render(request, 'staff/queue.html', {'tickets': final_tickets})
 
 @login_required
 def queue_display(request):
