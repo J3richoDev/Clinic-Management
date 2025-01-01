@@ -12,35 +12,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: url("{% static 'logo/bg.jpg' %}") no-repeat center center fixed;
+            background-size: cover;
+        }
+        .hero {
+            background: rgba(255, 255, 255, 0.8); 
+            border-radius: 8px;
+            padding: 20px;
+        }
+    </style>
 </head>
-<body style="font-family: 'Poppins', sans-serif;">
+<body>
 
     {% if messages %}
-                    <div class="toast messages top-0 z-50">
-                    {% for message in messages %}
-                        <div role="alert" class="alert {% if message.tags %} {{ message.tags }} {% else %} alert-success{% endif %}">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 shrink-0 stroke-current"
-                            fill="none"
-                            viewBox="0 0 24 24">
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span class="">{{ message }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+    <div class="toast messages top-0 z-50">
+        {% for message in messages %}
+            <div role="alert" class="alert {% if message.tags %} {{ message.tags }} {% else %} alert-success{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <div class="navbar bg-base-100 shadow-md">
         <div class="flex-1">
             <div class="mb-2 font-semibold rounded-lg text-2xl m-3">
                 <a href="" class="flex flex-row items-center">
-                    <img class="mask mask-squircle w-10 mr-4" src="{% static 'logo/clinic_logo.png' %}" alt="CLinic">
+                    <img class="mask mask-squircle w-10 mr-4" src="{% static 'logo/clinic_logo.png' %}" alt="Clinic">
                     Bulsu Clinic
                 </a>
             </div>
@@ -52,12 +56,12 @@
     </div>
 
     <!-- Hero Section -->
-    <div class="hero min-h-screen bg-base-200">
+    <div class="hero min-h-screen flex items-center justify-center">
         <div class="hero-content text-center">
             <div class="max-w-md">
                 <div class="avatar">
                     <div class="w-48 rounded">
-                    <img class="mask mask-squircle" src="{% static 'logo/clinic_logo.png' %}" alt="CLinic">
+                        <img class="mask mask-squircle" src="{% static 'logo/clinic_logo.png' %}" alt="Clinic">
                     </div>
                 </div>
                 <h1 class="text-5xl font-bold">Welcome to Bulsu Clinic</h1>

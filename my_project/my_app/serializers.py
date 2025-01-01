@@ -96,25 +96,5 @@ class PatientAccountSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This email is already in use.")
         return value
 
-    def validate_contact_number(self, value):
-        """
-        Validate duplicate contact number.
-        """
-        if PatientAccount.objects.filter(contact_number=value).exists():
-            raise serializers.ValidationError("This contact number is already in use.")
-        return value
-
-    def validate(self, attrs):
-        """
-        Cross-field validation.
-        """
-        email = attrs.get('email')
-        contact_number = attrs.get('contact_number')
-
-        if email and contact_number:
-            if PatientAccount.objects.filter(email=email, contact_number=contact_number).exists():
-                raise serializers.ValidationError("This email and contact number are already associated with an account.")
-
-        return attrs
 
         

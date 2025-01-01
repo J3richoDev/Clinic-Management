@@ -109,7 +109,10 @@ def add_staff(request):
 
         try:
             temp_password = get_random_string(12)
-            middle_initials = ''.join([word[0].lower() for word in middle_name.split() if word])
+            middle_initials = (
+                ''.join([word[0].lower() for word in middle_name.split() if word])
+                if middle_name else 'x'
+            )
 
             # Base Email Template
             base_email = (
@@ -807,15 +810,11 @@ class ValidatePatientDataView(APIView):
     """
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
-        contact_number = request.data.get('contact_number')
 
         errors = {}
 
         if email and PatientAccount.objects.filter(email=email).exists():
             errors['email'] = "This email is already in use."
-
-        if contact_number and PatientAccount.objects.filter(contact_number=contact_number).exists():
-            errors['contact_number'] = "This contact number is already in use."
 
         if errors:
             return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
