@@ -50,18 +50,6 @@
                                placeholder="Last Name"
                                class="input input-bordered w-full" required>
                     </div>
-    
-                    <!-- Username -->
-                    <div>
-                        <label for="id_username" class="block text-gray-700 font-medium mb-1">Username</label>
-                        <input type="text" name="username" id="id_username" 
-                            value="{{ form.username.value|default:'' }}" 
-                            placeholder="Username"
-                            class="input input-bordered w-full" required>
-                        {% if form.username.errors %}
-                            <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
-                        {% endif %}
-                    </div>
                     
                     <!-- Email -->
                     <div>
