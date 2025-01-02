@@ -229,37 +229,89 @@
 
 <script>
 
-    async function validatePatientData(email, contact_number) {
+    async function validateEmail(email) {
         try {
-            const response = await fetch('/my_app/api/patients/validate/', {
+            const response = await fetch('/my_app/api/patient-accounts/validate-email/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ email, contact_number }),
+                body: JSON.stringify({ email }),
             });
     
-            const data = await response.json();
+            const responseData = await response.json();
     
-            if (!response.ok) {
-                if (data.errors.email) {
-                    displayError(data.errors.email, 'errorMessagePage1');
-                } 
-                if (data.errors.contact_number) {
-                    displayError(data.errors.contact_number, 'errorMessagePage1');
+            if (response.ok) {
+                if (responseData.message === "Email is valid and available.") {
+                    return true; // Email is valid
                 }
-                return false;
+            } else {
+                if (responseData.message === "Email already exists.") {
+                    displayError('This email is already registered.', 'errorMessagePage1');
+                    return false; // Email already exists
+                }
             }
-    
-            return true;
-    
         } catch (error) {
-            console.error('Validation error:', error);
-            displayError('Validation failed. Please try again.', 'errorMessagePage1');
+            console.error('Email Validation Error:', error);
+            displayError('An error occurred during email validation. Please try again.', 'errorMessagePage1');
             return false;
         }
     }
+    
+    
+    async function validatePatientAccount() {
+        const formData = {
+            first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
+            last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
+            date_of_birth: getValue('#date_of_birth', document.getElementById('registrationFormPage1')),
+            age: getValue('#age', document.getElementById('registrationFormPage1')),
+            contact_number: getValue('input[placeholder="Contact No"]', document.getElementById('registrationFormPage1'))
+        };
+    
+        try {
+            const response = await fetch('/my_app/api/patient-accounts/validate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(formData),
+            });
+    
+            const responseData = await response.json();
+    
+            if (response.ok) {
+                if (responseData.message === "Validation successful.") {
+                    return true; // Proceed to Page 2
+                } 
+                
+                if (responseData.message === "Patient exists, but contact number is different.") {
+                    displayError('Warning: Patient exists, but contact number is different. Proceeding...', 'errorMessagePage1');
+                    return true; // Allow navigation
+                }
+    
+                if (responseData.message === "Contact number already exists for another patient.") {
+                    displayError('Error: Contact number is already used by another patient.', 'errorMessagePage1');
+                    return false; // Block navigation
+                }
+    
+                if (responseData.message === "Contact number already exists.") {
+                    displayError(responseData.message, 'errorMessagePage1');
+                    return false; // Block navigation
+                }
+            } else {
+                displayError(responseData.message || 'Validation failed.', 'errorMessagePage1');
+                return false; // Block navigation
+            }
+        } catch (error) {
+            console.error('Validation Error:', error);
+            displayError('An error occurred during validation. Please try again.', 'errorMessagePage1');
+            return false; // Block navigation
+        }
+    }
+    
+    
     
     async function showPage2() {
         const formData = {
@@ -272,7 +324,7 @@
             confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
         };
     
-        // ✅ Basic Validation
+        // Basic Validation
         if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password || !formData.contact_number) {
             displayError('All fields are required in Step 1!', 'errorMessagePage1');
             return;
@@ -294,18 +346,22 @@
             displayError('Password must be at least 8 characters long, include at least one number, one special character, and one letter.', 'errorMessagePage1');
             return;
         }
-    
-        // ✅ Server-side Duplicate Validation
-        const isValid = await validatePatientData(formData.email, formData.contact_number);
-        if (!isValid) {
-            return;
-        }
-    
-        // ✅ Clear Errors and Proceed to Step 2
-        displayError('', 'errorMessagePage1');
-        document.getElementById('page1').classList.add('hidden');
-        document.getElementById('page2').classList.remove('hidden');
+        const isEmailValid = await validateEmail(formData.email);
+    if (!isEmailValid) {
+        return; // Stop if email is invalid
     }
+
+        // Call Validation API
+        const isValid = await validatePatientAccount();
+    
+        if (isValid) {
+            displayError('', 'errorMessagePage1');
+            document.getElementById('page1').classList.add('hidden');
+            document.getElementById('page2').classList.remove('hidden');
+        }
+    }
+    
+    
     
 
     // Navigate Back to Step 1

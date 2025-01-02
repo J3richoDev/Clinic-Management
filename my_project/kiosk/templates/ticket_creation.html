@@ -80,37 +80,48 @@
         </div>
     </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const transactionType = document.getElementById('id_transaction_type');
-        const certificateType = document.getElementById('id_certificate_type');
-        const certificateRow = document.getElementById('certificate-row');
-        const detailsField = document.getElementById('id_details');
-        const detailsRow = document.getElementById('details-row');
-
-        // Initially hide rows
-        certificateRow.classList.add('hidden');
-        detailsRow.classList.add('hidden');
-
-        transactionType.addEventListener('change', function () {
-            const selectedValue = transactionType.value;
-
-            if (selectedValue === 'CERTIFICATE') {
-                certificateRow.classList.remove('hidden');
-                detailsRow.classList.add('hidden');
-                detailsField.value = '';
-            } else if (selectedValue === 'OTHER') {
-                certificateRow.classList.add('hidden');
-                detailsRow.classList.remove('hidden');
-                certificateType.value = '';
-            } else {
-                certificateRow.classList.add('hidden');
-                detailsRow.classList.add('hidden');
-                detailsField.value = '';
-                certificateType.value = '';
-            }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const transactionType = document.getElementById('id_transaction_type');
+            const certificateType = document.getElementById('id_certificate_type');
+            const certificateRow = document.getElementById('certificate-row');
+            const detailsField = document.getElementById('id_details');
+            const detailsRow = document.getElementById('details-row');
+    
+            // Initially hide rows
+            certificateRow.classList.add('hidden');
+            detailsRow.classList.add('hidden');
+    
+            transactionType.addEventListener('change', function () {
+                const selectedValue = transactionType.value;
+    
+                if (selectedValue === 'CERTIFICATE') {
+                    certificateRow.classList.remove('hidden');
+                    detailsRow.classList.add('hidden');
+                    detailsField.value = '';
+    
+                    // ✅ Automatically select the first valid option
+                    if (certificateType && certificateType.options.length > 0) {
+                        for (let i = 0; i < certificateType.options.length; i++) {
+                            if (certificateType.options[i].value !== '') {
+                                certificateType.value = certificateType.options[i].value;
+                                break;
+                            }
+                        }
+                    }
+                } else if (selectedValue === 'OTHER') {
+                    certificateRow.classList.add('hidden');
+                    detailsRow.classList.remove('hidden');
+                    certificateType.value = '';
+                } else {
+                    certificateRow.classList.add('hidden');
+                    detailsRow.classList.add('hidden');
+                    detailsField.value = '';
+                    certificateType.value = '';
+                }
+            });
         });
-    });
-</script>
+    </script>
+    
 </body>
 </html>
