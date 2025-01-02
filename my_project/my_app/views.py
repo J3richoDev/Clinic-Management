@@ -790,3 +790,28 @@ def validate_patient_account(request):
         return Response({"message": "Contact number already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
     return Response({"message": "Validation successful."}, status=status.HTTP_200_OK)
+
+
+
+from rest_framework import status, generics
+from rest_framework.response import Response
+from .models import PatientAccount
+from .serializers import PatientAccountListSerializer
+
+class ValidateEmailView(generics.GenericAPIView):
+    """
+    API endpoint to validate email duplication.
+    """
+    serializer_class = PatientAccountListSerializer
+
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+
+        if not email:
+            return Response({'message': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if PatientAccount.objects.filter(email=email).exists():
+            return Response({'message': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'Email is valid and available.'}, status=status.HTTP_200_OK)
+

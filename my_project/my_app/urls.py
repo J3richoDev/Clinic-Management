@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from . import views
 from django.contrib.auth.views import LogoutView
 from .views import DashboardStatsAPIView
-from .views import PatientRegistrationAPIView, PatientAccountListView, validate_patient_account
+from .views import PatientRegistrationAPIView, PatientAccountListView, validate_patient_account, ValidateEmailView
 from .views import AppointmentCreateAPIView
 
 urlpatterns = [
@@ -45,6 +45,7 @@ urlpatterns = [
     path('patients/', views.patient_list, name='patient_list'),
      path('api/patient-accounts/', PatientAccountListView.as_view(), name='patient-account-list'),
          path('api/patient-accounts/validate/', validate_patient_account, name='validate-patient-account'),
+         path('api/patient-accounts/validate-email/', ValidateEmailView.as_view(), name='validate-email'),
 
     path('patients/<int:patient_id>/', views.patient_detail, name='patient_detail'),
     path('patients/<int:patient_id>/add-record/', views.add_medical_record, name='add_medical_record'),
