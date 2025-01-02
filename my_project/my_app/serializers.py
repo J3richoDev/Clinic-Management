@@ -81,3 +81,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'scheduled_time', 'transaction_time', 'transaction_group'
         ]
         read_only_fields = ['queue_number', 'transaction_time']
+
+class PatientAccountListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientAccount
+        fields = '__all__' 

@@ -737,3 +737,56 @@ class AppointmentCreateAPIView(generics.CreateAPIView):
             return super().create(request, *args, **kwargs)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+from rest_framework.generics import ListAPIView
+from .models import PatientAccount
+from .serializers import PatientAccountListSerializer
+
+class PatientAccountListView(ListAPIView):
+    queryset = PatientAccount.objects.all()
+    serializer_class = PatientAccountListSerializer
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import PatientAccount
+
+@api_view(['POST'])
+def validate_patient_account(request):
+    """
+    Validate if a patient's details or contact number already exist.
+    """
+    first_name = request.data.get('first_name')
+    last_name = request.data.get('last_name')
+    date_of_birth = request.data.get('date_of_birth')
+    age = request.data.get('age')
+    contact_number = request.data.get('contact_number')
+
+    # Check if there's an exact match for the patient details (excluding contact_number)
+    matching_records = PatientAccount.objects.filter(
+        first_name=first_name,
+        last_name=last_name,
+        date_of_birth=date_of_birth,
+        age=age
+    )
+
+    if matching_records.exists():
+        for record in matching_records:
+            if record.contact_number == contact_number:
+                # Exact match, allow to proceed
+                return Response({"message": "Validation successful."}, status=status.HTTP_200_OK)
+        
+        # Check if the contact_number exists globally (excluding matching records)
+        global_conflict = PatientAccount.objects.exclude(id__in=matching_records.values_list('id', flat=True)) \
+                                                .filter(contact_number=contact_number).exists()
+        if global_conflict:
+            return Response({"message": "Contact number already exists for another patient."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Details match, but contact_number is unique
+        return Response({"message": "Patient exists, but contact number is different."}, status=status.HTTP_200_OK)
+
+    # Global check for contact_number uniqueness
+    if PatientAccount.objects.filter(contact_number=contact_number).exists():
+        return Response({"message": "Contact number already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+    return Response({"message": "Validation successful."}, status=status.HTTP_200_OK)
