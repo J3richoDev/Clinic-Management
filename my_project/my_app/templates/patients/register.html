@@ -240,72 +240,138 @@
                 body: JSON.stringify({ email, contact_number }),
             });
     
-            const data = await response.json();
-    
-            if (!response.ok) {
-                if (data.errors.email) {
-                    displayError(data.errors.email, 'errorMessagePage1');
-                } 
-                if (data.errors.contact_number) {
-                    displayError(data.errors.contact_number, 'errorMessagePage1');
+            async function validatePatientData(email, contact_number) {
+                try {
+                    const response = await fetch('/my_app/api/patients/validate/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ email, contact_number }),
+                    });
+            
+                    const data = await response.json();
+            
+                    if (!response.ok) {
+                        if (data.errors.email) {
+                            displayError(data.errors.email, 'errorMessagePage1');
+                        } 
+                        if (data.errors.contact_number) {
+                            displayError(data.errors.contact_number, 'errorMessagePage1');
+                        }
+                        return false;
+                    }
+            
+                    return true;
+            
+                } catch (error) {
+                    console.error('Validation error:', error);
+                    displayError('Validation failed. Please try again.', 'errorMessagePage1');
+                    return false;
                 }
-                return false;
             }
-    
-            return true;
-    
-        } catch (error) {
-            console.error('Validation error:', error);
-            displayError('Validation failed. Please try again.', 'errorMessagePage1');
-            return false;
-        }
-    }
-    
+            
+            // ✅ Validate Full Patient Account Details
+            async function validatePatientAccount() {
+                const formData = {
+                    first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
+                    last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
+                    date_of_birth: getValue('#date_of_birth', document.getElementById('registrationFormPage1')),
+                    age: getValue('#age', document.getElementById('registrationFormPage1')),
+                    contact_number: getValue('input[placeholder="Contact No"]', document.getElementById('registrationFormPage1'))
+                };
+            
+                try {
+                    const response = await fetch('/my_app/api/patient-accounts/validate/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify(formData),
+                    });
+            
+                    const responseData = await response.json();
+            
+                    if (response.ok) {
+                        if (responseData.message === "Validation successful.") {
+                            return true; // Proceed to Page 2
+                        } 
+                        
+                        if (responseData.message === "Patient exists, but contact number is different.") {
+                            displayError('Warning: Patient exists, but contact number is different. Proceeding...', 'errorMessagePage1');
+                            return true; // Allow navigation
+                        }
+            
+                        if (responseData.message === "Contact number already exists for another patient.") {
+                            displayError('Error: Contact number is already used by another patient.', 'errorMessagePage1');
+                            return false; // Block navigation
+                        }
+            
+                        if (responseData.message === "Contact number already exists.") {
+                            displayError(responseData.message, 'errorMessagePage1');
+                            return false; // Block navigation
+                        }
+                    } else {
+                        displayError(responseData.message || 'Validation failed.', 'errorMessagePage1');
+                        return false; // Block navigation
+                    }
+                } catch (error) {
+                    console.error('Validation Error:', error);
+                    displayError('An error occurred during validation. Please try again.', 'errorMessagePage1');
+                    return false; // Block navigation
+                }
+            }
+
     async function showPage2() {
-        const formData = {
-            first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
-            last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
-            email: getValue('input[placeholder="Enter your email"]', document.getElementById('registrationFormPage1')),
-            contact_number: getValue('input[placeholder="Contact No"]', document.getElementById('registrationFormPage1')),
-            address: getValue('#address', document.getElementById('registrationFormPage1')),
-            password: getValue('#password1', document.getElementById('registrationFormPage1')),
-            confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
-        };
-    
-        // ✅ Basic Validation
-        if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password || !formData.contact_number) {
-            displayError('All fields are required in Step 1!', 'errorMessagePage1');
-            return;
-        }
-    
-        if (formData.password !== formData.confirm_password) {
-            displayError('Passwords do not match!', 'errorMessagePage1');
-            return;
-        }
-    
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            displayError('Please enter a valid email address (e.g., example@domain.com).', 'errorMessagePage1');
-            return;
-        }
-    
-        const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;
-        if (!passwordRegex.test(formData.password)) {
-            displayError('Password must be at least 8 characters long, include at least one number, one special character, and one letter.', 'errorMessagePage1');
-            return;
-        }
-    
-        // ✅ Server-side Duplicate Validation
-        const isValid = await validatePatientData(formData.email, formData.contact_number);
-        if (!isValid) {
-            return;
-        }
-    
-        // ✅ Clear Errors and Proceed to Step 2
-        displayError('', 'errorMessagePage1');
-        document.getElementById('page1').classList.add('hidden');
-        document.getElementById('page2').classList.remove('hidden');
+    const formData = {
+        first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
+        last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
+        email: getValue('input[placeholder="Enter your email"]', document.getElementById('registrationFormPage1')),
+        contact_number: getValue('input[placeholder="Contact No"]', document.getElementById('registrationFormPage1')),
+        address: getValue('#address', document.getElementById('registrationFormPage1')),
+        password: getValue('#password1', document.getElementById('registrationFormPage1')),
+        confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
+    };
+
+    // ✅ Basic Validation
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.address || !formData.password || !formData.contact_number) {
+        displayError('All fields are required in Step 1!', 'errorMessagePage1');
+        return;
     }
+
+    if (formData.password !== formData.confirm_password) {
+        displayError('Passwords do not match!', 'errorMessagePage1');
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+        displayError('Please enter a valid email address (e.g., example@domain.com).', 'errorMessagePage1');
+        return;
+    }
+
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+        displayError('Password must be at least 8 characters long, include at least one number, one special character, and one letter.', 'errorMessagePage1');
+        return;
+    }
+
+    // ✅ Server-Side Validation
+    const isValidEmailAndContact = await validatePatientData(formData.email, formData.contact_number);
+    if (!isValidEmailAndContact) return;
+
+    const isValidAccount = await validatePatientAccount();
+    if (!isValidAccount) return;
+
+    // ✅ Clear Errors and Proceed to Step 2
+    displayError('', 'errorMessagePage1');
+    document.getElementById('page1').classList.add('hidden');
+    document.getElementById('page2').classList.remove('hidden');
+}
+    
+    
     
 
     // Navigate Back to Step 1

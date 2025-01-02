@@ -83,7 +83,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['queue_number', 'transaction_time']
 
 
-class PatientAccountSerializer(serializers.ModelSerializer):
+class PatientsAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientAccount
         fields = '__all__'  # Include all fields in the response
@@ -98,3 +98,7 @@ class PatientAccountSerializer(serializers.ModelSerializer):
 
 
         
+class PatientAccountListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PatientAccount
+        fields = '__all__' 
