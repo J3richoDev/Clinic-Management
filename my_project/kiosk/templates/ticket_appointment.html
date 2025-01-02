@@ -56,6 +56,7 @@
                     <div>
                         <label for="appointment_time" class="block text-gray-700 font-medium mb-1">Select Time</label>
                         <input type="time" id="appointment_time" name="appointment_time" class="input input-bordered w-full" required>
+                        <p id="time_warning" class="text-red-500 text-sm mt-1 hidden">Time must be between 9:00 AM and 5:00 PM.</p>
                     </div>
                     <div class="flex flex-col md:flex-row gap-2">
                         <button type="button" onclick="window.history.back()" class="btn btn-secondary w-full md:w-1/2">Back</button>
@@ -229,31 +230,68 @@
     });
     
     document.addEventListener('DOMContentLoaded', function () {
-        const appointmentDateInput = document.getElementById('appointment_date');
-        const appointmentTimeInput = document.getElementById('appointment_time');
+    const appointmentDateInput = document.getElementById('appointment_date');
+    const appointmentTimeInput = document.getElementById('appointment_time');
+    const timeWarning = document.getElementById('time_warning');
+    const submitButton = document.getElementById('submit_button');
 
-        // Prevent past dates
-        const today = new Date().toISOString().split('T')[0];
-        appointmentDateInput.min = today;
+    // Prevent past dates
+    const today = new Date().toISOString().split('T')[0];
+    appointmentDateInput.min = today;
 
-        appointmentDateInput.addEventListener('change', function () {
-            const selectedDate = new Date(appointmentDateInput.value);
-            const currentDate = new Date();
-            const isToday = selectedDate.toDateString() === currentDate.toDateString();
+    function validateTime() {
+        const selectedTime = appointmentTimeInput.value;
+        const minTime = appointmentTimeInput.min || "09:00";
+        const maxTime = appointmentTimeInput.max || "17:00";
 
-            if (isToday) {
-                // Add 3 hours to current time
-                const threeHoursAhead = new Date(currentDate.getTime() + 3 * 60 * 60 * 1000);
-                const hours = String(threeHoursAhead.getHours()).padStart(2, '0');
-                const minutes = String(threeHoursAhead.getMinutes()).padStart(2, '0');
-                appointmentTimeInput.min = `${hours}:${minutes}`;
+        if (selectedTime < minTime || selectedTime > maxTime) {
+            timeWarning.classList.remove('hidden');
+            submitButton.disabled = true;
+        } else {
+            timeWarning.classList.add('hidden');
+            submitButton.disabled = false;
+        }
+    }
+
+    // Update time restrictions when the date is selected
+    appointmentDateInput.addEventListener('change', function () {
+        const selectedDate = new Date(appointmentDateInput.value);
+        const currentDate = new Date();
+        const isToday = selectedDate.toDateString() === currentDate.toDateString();
+
+        let minTime = "09:00";
+        let maxTime = "17:00";
+
+        if (isToday) {
+            // Add 3 hours to current time
+            const threeHoursAhead = new Date(currentDate.getTime() + 3 * 60 * 60 * 1000);
+            let hours = String(threeHoursAhead.getHours()).padStart(2, '0');
+            let minutes = String(threeHoursAhead.getMinutes()).padStart(2, '0');
+
+            if (hours >= 17) {
+                // If 3 hours ahead is past 5 PM, disable time selection
+                appointmentTimeInput.min = "";
+                appointmentTimeInput.max = "";
+                appointmentTimeInput.disabled = true;
+                timeWarning.textContent = 'No available time slots for today. Please select another date.';
+                timeWarning.classList.remove('hidden');
+                submitButton.disabled = true;
+                return;
             } else {
-                appointmentTimeInput.min = "09:00";
+                minTime = `${hours}:${minutes}`;
             }
+        }
 
-            appointmentTimeInput.max = "17:00";
-        });
+        appointmentTimeInput.min = minTime;
+        appointmentTimeInput.max = maxTime;
+        appointmentTimeInput.disabled = false;
+        timeWarning.classList.add('hidden');
+        submitButton.disabled = false;
     });
+
+    // Validate time on input
+    appointmentTimeInput.addEventListener('input', validateTime);
+});
 </script>
 
 
