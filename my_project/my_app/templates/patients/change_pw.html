@@ -6,75 +6,78 @@
 {% block heading %}Change Password{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-lg mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="p-6">
-            <!-- ✅ Page Title -->
-            <h1 class="text-2xl font-bold mb-4 text-center">Change Password</h1>
-            <p class="text-gray-600 text-center mb-6">Ensure your account stays secure by using a strong password.</p>
-            
-            {% if form.errors %}
-                <div class="mb-4 p-4 bg-red-100 text-red-700 border-l-4 border-red-500 rounded-lg">
-                    <strong>Error:</strong> Please correct the following errors:
-                    <ul class="list-disc list-inside mt-2">
-                        {% for field in form %}
-                            {% for error in field.errors %}
-                                <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+<div class="bg-sky-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <div class="max-w-lg mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <!-- ✅ Page Title -->
+                <h1 class="text-2xl font-bold mb-4 text-center">Change Password</h1>
+                <p class="text-gray-600 text-center mb-6">Ensure your account stays secure by using a strong password.</p>
+                
+                {% if form.errors %}
+                    <div class="mb-4 p-4 bg-red-100 text-red-700 border-l-4 border-red-500 rounded-lg">
+                        <strong>Error:</strong> Please correct the following errors:
+                        <ul class="list-disc list-inside mt-2">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                {% endfor %}
                             {% endfor %}
-                        {% endfor %}
-                        {% for error in form.non_field_errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+    
+                <!-- ✅ Change Password Form -->
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Current Password -->
+                    <div>
+                        <label for="id_old_password" class="block text-gray-700 font-medium mb-1">Current Password</label>
+                        <input type="password" name="old_password" id="id_old_password" 
+                               placeholder="Current Password" 
+                               class="input input-bordered w-full" required>
+                    </div>
+                    
+                    <!-- New Password -->
+                    <div>
+                        <label for="id_new_password1" class="block text-gray-700 font-medium mb-1">New Password</label>
+                        <input type="password" name="new_password1" id="id_new_password1" 
+                               placeholder="New Password" 
+                               class="input input-bordered w-full" required>
+                    </div>
+                    
+                    <!-- Confirm New Password -->
+                    <div>
+                        <label for="id_new_password2" class="block text-gray-700 font-medium mb-1">Confirm New Password</label>
+                        <input type="password" name="new_password2" id="id_new_password2" 
+                               placeholder="Confirm New Password" 
+                               class="input input-bordered w-full" required>
+                    </div>
+                    
+                    <!-- ✅ Action Buttons -->
+                    <div class="flex flex-col md:flex-row gap-4 justify-center mt-6">
+                        <button type="submit" class="btn btn-primary w-full md:w-auto">Update Password</button>
+                        <a href="{% url 'patient_view_profile' %}" class="btn btn-neutral w-full md:w-auto">Cancel</a>
+                    </div>
+                </form>
+                
+                <!-- ✅ Password Guidelines -->
+                <div class="mt-6 text-sm text-gray-500">
+                    <h3 class="font-semibold mb-2">Password Requirements:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>At least 8 characters long</li>
+                        <li>Include both uppercase and lowercase letters</li>
+                        <li>Contain at least one number</li>
+                        <li>Include a special character (!@#$%^&*)</li>
                     </ul>
                 </div>
-            {% endif %}
-
-            <!-- ✅ Change Password Form -->
-            <form method="POST" class="space-y-4">
-                {% csrf_token %}
-                
-                <!-- Current Password -->
-                <div>
-                    <label for="id_old_password" class="block text-gray-700 font-medium mb-1">Current Password</label>
-                    <input type="password" name="old_password" id="id_old_password" 
-                           placeholder="Current Password" 
-                           class="input input-bordered w-full" required>
-                </div>
-                
-                <!-- New Password -->
-                <div>
-                    <label for="id_new_password1" class="block text-gray-700 font-medium mb-1">New Password</label>
-                    <input type="password" name="new_password1" id="id_new_password1" 
-                           placeholder="New Password" 
-                           class="input input-bordered w-full" required>
-                </div>
-                
-                <!-- Confirm New Password -->
-                <div>
-                    <label for="id_new_password2" class="block text-gray-700 font-medium mb-1">Confirm New Password</label>
-                    <input type="password" name="new_password2" id="id_new_password2" 
-                           placeholder="Confirm New Password" 
-                           class="input input-bordered w-full" required>
-                </div>
-                
-                <!-- ✅ Action Buttons -->
-                <div class="flex flex-col md:flex-row gap-4 justify-center mt-6">
-                    <button type="submit" class="btn btn-primary w-full md:w-auto">Update Password</button>
-                    <a href="{% url 'patient_view_profile' %}" class="btn btn-neutral w-full md:w-auto">Cancel</a>
-                </div>
-            </form>
-            
-            <!-- ✅ Password Guidelines -->
-            <div class="mt-6 text-sm text-gray-500">
-                <h3 class="font-semibold mb-2">Password Requirements:</h3>
-                <ul class="list-disc list-inside space-y-1">
-                    <li>At least 8 characters long</li>
-                    <li>Include both uppercase and lowercase letters</li>
-                    <li>Contain at least one number</li>
-                    <li>Include a special character (!@#$%^&*)</li>
-                </ul>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

@@ -39,6 +39,7 @@ urlpatterns = [
     # Patient Profile URLs
     path('patient-profile/', views.patient_view_profile, name='patient_view_profile'),
     path('patient-profile/edit/', views.patient_edit_own_profile, name='patient_edit_own_profile'),
+    path('patient-profile-info/edit', views.edit_patient_info, name='patient_edit_info'),
     path('patient-profile/change-password/', views.patient_change_password, name='patient_change_password'),
 
     path('proceed/<int:ticket_id>/', views.proceed_next_patient, name='proceed_next_patient'),

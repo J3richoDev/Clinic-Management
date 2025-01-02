@@ -127,6 +127,7 @@ class PatientAccount(models.Model):
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True, null=True)
     last_name = models.CharField(max_length=50)
+    username = models.CharField(max_length=255, unique=True, blank=True, null=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     address = models.TextField(blank=False, null=False)
     contact_number = models.CharField(max_length=15, blank=True, null=True)

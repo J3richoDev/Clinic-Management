@@ -29,13 +29,26 @@ class CustomUserForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'middle_name', 'last_name', 'email', 'profile_picture']
+        fields = ['username', 'first_name', 'middle_name', 'last_name', 'email', 'profile_picture']
         widgets = {
+            'username': forms.TextInput(attrs={'placeholder': 'Username'}),
             'first_name': forms.TextInput(attrs={'placeholder': 'First Name'}),
             'middle_name': forms.TextInput(attrs={'placeholder': 'Middle Name'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Last Name'}),
             'email': forms.EmailInput(attrs={'placeholder': 'Email'}),
         }
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if CustomUser.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This username is already taken. Please choose another.")
+        return username
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("This email is already taken. Please use another email.")
+        return email
     
 class CustomPasswordChangeForm(PasswordChangeForm):
     new_password1 = forms.CharField(
@@ -141,7 +154,64 @@ class PatientForm(forms.ModelForm):
                 )
         
         return cleaned_data
+    
+    
+class PatientEditForm(forms.ModelForm):
+    date_of_birth = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        required=False
+    )
+    SEX_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+    ]
+    sex = forms.ChoiceField(
+        choices=SEX_CHOICES, 
+        widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Sex'})
+    )
 
+    class Meta:
+        model = PatientAccount
+        fields = [
+            'address', 'contact_number', 'age', 'sex', 'campus',
+            'college', 'course_year', 'emergency_contact',
+            'relation', 'emergency_contact_number', 'blood_type',
+            'allergies', 'role', 'date_of_birth'
+        ]
+        widgets = {
+            'address': forms.Textarea(attrs={'rows': 3, 'class': 'textarea textarea-bordered'}),
+            'contact_number': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'age': forms.NumberInput(attrs={'class': 'input input-bordered'}),
+            'campus': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'college': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'course_year': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'emergency_contact': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'relation': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'emergency_contact_number': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'blood_type': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'allergies': forms.Textarea(attrs={'rows': 2, 'class': 'textarea textarea-bordered'}),
+            'role': forms.Select(attrs={'class': 'select select-bordered'}),
+        }
+
+    def clean_contact_number(self):
+        contact_number = self.cleaned_data.get('contact_number')
+
+        if contact_number:
+            # Check if the contact number has changed
+            if self.instance.pk and self.instance.contact_number == contact_number:
+                # If the number hasn't changed, allow it
+                return contact_number
+
+            # Check if the new contact number already exists in other records
+            existing = PatientAccount.objects.filter(contact_number=contact_number)
+            if self.instance.pk:
+                existing = existing.exclude(pk=self.instance.pk)  # Exclude current instance
+
+            if existing.exists():
+                raise forms.ValidationError("This contact number is already in use.")
+        
+        return contact_number
+    
 from django import forms
 from .models import MedicalRecord
 

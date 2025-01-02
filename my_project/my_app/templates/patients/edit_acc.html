@@ -6,76 +6,105 @@
 {% block heading %}Edit Profile{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="p-6">
-            <h1 class="text-2xl font-bold mb-4 text-center">Edit Profile</h1>
-            
-            <div class="flex justify-center mb-4">
-                <img 
-                    src="{{ user.profile_picture.url|default:'/media/profile_pictures/default.jpg' }}" 
-                    alt="Profile Picture" 
-                    id="profilePreview"
-                    class="w-32 h-32 rounded-full border-4 border-gray-200 object-cover"
-                >
+<div class="bg-sky-100">
+    <div class="container mx-auto px-4 py-6">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold mb-4 text-center">Edit Profile</h1>
+                
+                <div class="flex justify-center mb-4">
+                    <img 
+                        src="{{ user.profile_picture.url|default:'/media/profile_pictures/default.jpg' }}" 
+                        alt="Profile Picture" 
+                        id="profilePreview"
+                        class="w-32 h-32 rounded-full border-4 border-gray-200 object-cover"
+                    >
+                </div>
+    
+                <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- First Name -->
+                    <div>
+                        <label for="id_first_name" class="block text-gray-700 font-medium mb-1">First Name</label>
+                        <input type="text" name="first_name" id="id_first_name" 
+                               value="{{ form.first_name.value|default:'' }}" 
+                               placeholder="First Name"
+                               class="input input-bordered w-full" required>
+                    </div>
+                    
+                    <!-- Middle Name -->
+                    <div>
+                        <label for="id_middle_name" class="block text-gray-700 font-medium mb-1">Middle Name</label>
+                        <input type="text" name="middle_name" id="id_middle_name" 
+                               value="{{ form.middle_name.value|default:'' }}" 
+                               placeholder="Middle Name" 
+                               class="input input-bordered w-full">
+                    </div>
+                    
+                    <!-- Last Name -->
+                    <div>
+                        <label for="id_last_name" class="block text-gray-700 font-medium mb-1">Last Name</label>
+                        <input type="text" name="last_name" id="id_last_name" 
+                               value="{{ form.last_name.value|default:'' }}" 
+                               placeholder="Last Name"
+                               class="input input-bordered w-full" required>
+                    </div>
+    
+                    <!-- Username -->
+                    <div>
+                        <label for="id_username" class="block text-gray-700 font-medium mb-1">Username</label>
+                        <input type="text" name="username" id="id_username" 
+                            value="{{ form.username.value|default:'' }}" 
+                            placeholder="Username"
+                            class="input input-bordered w-full" required>
+                        {% if form.username.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Email -->
+                    <div>
+                        <label for="id_email" class="block text-gray-700 font-medium mb-1">Email</label>
+                        <input type="email" name="email" id="id_email" 
+                            value="{{ form.email.value|default:'' }}" 
+                            placeholder="Email"
+                            class="input input-bordered w-full" required>
+                        {% if form.email.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Profile Picture Upload -->
+                    <div>
+                        <label for="id_profile_picture" class="block text-gray-700 font-medium mb-1">Profile Picture</label>
+                        <input type="file" name="profile_picture" id="id_profile_picture" 
+                               accept="image/*"
+                               class="file-input file-input-bordered w-full"
+                               onchange="previewProfilePicture(event)">
+                    </div>
+    
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+                            <strong>Error(s):</strong>
+                            <ul>
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="flex flex-col md:flex-row gap-4 justify-center mt-6">
+                        <button type="submit" class="btn btn-primary w-full md:w-auto">Save Changes</button>
+                        <a href="{% url 'patient_view_profile' %}" class="btn btn-neutral w-full md:w-auto">Cancel</a>
+                    </div>
+                </form>
             </div>
-
-            <form method="POST" enctype="multipart/form-data" class="space-y-4">
-                {% csrf_token %}
-                
-                <!-- First Name -->
-                <div>
-                    <label for="id_first_name" class="block text-gray-700 font-medium mb-1">First Name</label>
-                    <input type="text" name="first_name" id="id_first_name" 
-                           value="{{ form.first_name.value|default:'' }}" 
-                           placeholder="First Name"
-                           class="input input-bordered w-full" required>
-                </div>
-                
-                <!-- Middle Name -->
-                <div>
-                    <label for="id_middle_name" class="block text-gray-700 font-medium mb-1">Middle Name</label>
-                    <input type="text" name="middle_name" id="id_middle_name" 
-                           value="{{ form.middle_name.value|default:'' }}" 
-                           placeholder="Middle Name"
-                           class="input input-bordered w-full">
-                </div>
-                
-                <!-- Last Name -->
-                <div>
-                    <label for="id_last_name" class="block text-gray-700 font-medium mb-1">Last Name</label>
-                    <input type="text" name="last_name" id="id_last_name" 
-                           value="{{ form.last_name.value|default:'' }}" 
-                           placeholder="Last Name"
-                           class="input input-bordered w-full" required>
-                </div>
-                
-                <!-- Email -->
-                <div>
-                    <label for="id_email" class="block text-gray-700 font-medium mb-1">Email</label>
-                    <input type="email" name="email" id="id_email" 
-                           value="{{ form.email.value|default:'' }}" 
-                           placeholder="Email"
-                           class="input input-bordered w-full" required>
-                </div>
-                
-                <!-- Profile Picture Upload -->
-                <div>
-                    <label for="id_profile_picture" class="block text-gray-700 font-medium mb-1">Profile Picture</label>
-                    <input type="file" name="profile_picture" id="id_profile_picture" 
-                           accept="image/*"
-                           class="file-input file-input-bordered w-full"
-                           onchange="previewProfilePicture(event)">
-                </div>
-                
-                <div class="flex flex-col md:flex-row gap-4 justify-center mt-6">
-                    <button type="submit" class="btn btn-primary w-full md:w-auto">Save Changes</button>
-                    <a href="{% url 'patient_view_profile' %}" class="btn btn-neutral w-full md:w-auto">Cancel</a>
-                </div>
-            </form>
         </div>
     </div>
 </div>
+
 
 <script>
     function previewProfilePicture(event) {

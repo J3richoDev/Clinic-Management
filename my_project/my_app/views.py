@@ -9,7 +9,7 @@ from django.utils.crypto import get_random_string
 from django.utils.timezone import localtime, now
 from .models import CustomUser, PatientAccount, MedicalRecord
 from kiosk.models import Ticket
-from .forms import ProfileForm, CustomPasswordChangeForm, PatientForm, MedicalRecordForm
+from .forms import ProfileForm, CustomPasswordChangeForm, PatientForm, MedicalRecordForm, PatientEditForm
 from django.db import connection
 from django.db.models import Case, When, Value, IntegerField, Count, Avg, Q, ExpressionWrapper, DurationField, F
 from rest_framework.views import APIView
@@ -355,7 +355,29 @@ def patient_edit_own_profile(request):
     else:
         form = ProfileForm(instance=user)
 
-    return render(request, 'patients/edit_acc.html', {'form': form})
+    return render(request, 'patients/edit_acc.html', {'form': form, 'user':user})
+
+def edit_patient_info(request):
+    if not request.session.get('patient_id'):
+        return redirect('patient_login')
+
+    patient_id = request.session.get('patient_id')
+    patient = get_object_or_404(PatientAccount, id=patient_id)
+    
+    if request.method == 'POST':
+        form = PatientEditForm(request.POST, instance=patient)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Patient information updated successfully.')
+            return redirect('patient_view_profile')
+    else:
+        form = PatientEditForm(instance=patient)
+    
+    context = {
+        'form': form,
+        'patient': patient
+    }
+    return render(request, 'patients/edit_info.html', context)
 
 def patient_change_password(request):
     

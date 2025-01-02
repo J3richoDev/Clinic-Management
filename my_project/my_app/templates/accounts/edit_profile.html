@@ -49,14 +49,29 @@
                            placeholder="Last Name"
                            class="input input-bordered w-full" required>
                 </div>
+
+                <!-- Username -->
+                <div>
+                    <label for="id_username" class="block text-gray-700 font-medium mb-1">Username</label>
+                    <input type="text" name="username" id="id_username" 
+                        value="{{ form.username.value|default:'' }}" 
+                        placeholder="Username"
+                        class="input input-bordered w-full" required>
+                    {% if form.username.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
                 
                 <!-- Email -->
                 <div>
                     <label for="id_email" class="block text-gray-700 font-medium mb-1">Email</label>
                     <input type="email" name="email" id="id_email" 
-                           value="{{ form.email.value|default:'' }}" 
-                           placeholder="Email"
-                           class="input input-bordered w-full" required>
+                        value="{{ form.email.value|default:'' }}" 
+                        placeholder="Email"
+                        class="input input-bordered w-full" required>
+                    {% if form.email.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
                 </div>
                 
                 <!-- Profile Picture Upload -->
@@ -67,6 +82,17 @@
                            class="file-input file-input-bordered w-full"
                            onchange="previewProfilePicture(event)">
                 </div>
+
+                {% if form.non_field_errors %}
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+                        <strong>Error(s):</strong>
+                        <ul>
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
                 
                 <div class="flex flex-col md:flex-row gap-4 justify-center mt-6">
                     <button type="submit" class="btn btn-primary w-full md:w-auto">Save Changes</button>

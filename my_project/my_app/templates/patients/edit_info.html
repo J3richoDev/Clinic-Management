@@ -1,0 +1,171 @@
+{% extends 'guest.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Profile{% endblock %}
+{% block heading %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="bg-sky-100 min-h-screen py-10">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-5">
+                <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">📝 Edit Patient Information</h1>
+
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error mb-4 p-4 rounded-lg bg-red-100 text-red-800">
+                        <ul class="list-disc pl-5">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <form method="POST" enctype="multipart/form-data" class="space-y-8">
+                    {% csrf_token %}
+
+                    <!-- 🏠 Personal Information -->
+                    <fieldset class="border border-gray-200 rounded-md p-4">
+                        <legend class="text-lg font-semibold px-2">🏠 Personal Information</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                            <div>
+                                {{ form.contact_number|as_crispy_field }}
+                                {% if form.contact_number.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.contact_number.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.age|as_crispy_field }}
+                                {% if form.age.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.age.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.sex|as_crispy_field }}
+                                {% if form.sex.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.sex.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.date_of_birth|as_crispy_field }}
+                                {% if form.date_of_birth.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.date_of_birth.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.address|as_crispy_field }}
+                                {% if form.address.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.address.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- 🎓 Academic Information -->
+                    <fieldset class="border border-gray-200 rounded-md p-4">
+                        <legend class="text-lg font-semibold px-2">🎓 Academic Information</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                            <div>
+                                {{ form.campus|as_crispy_field }}
+                                {% if form.campus.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.campus.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.college|as_crispy_field }}
+                                {% if form.college.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.college.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.course_year|as_crispy_field }}
+                                {% if form.course_year.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.course_year.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.role|as_crispy_field }}
+                                {% if form.role.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.role.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- 🚨 Emergency Contact -->
+                    <fieldset class="border border-gray-200 rounded-md p-4">
+                        <legend class="text-lg font-semibold px-2">🚨 Emergency Contact</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                            <div>
+                                {{ form.emergency_contact|as_crispy_field }}
+                                {% if form.emergency_contact.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.emergency_contact.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.relation|as_crispy_field }}
+                                {% if form.relation.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.relation.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.emergency_contact_number }}
+                                {% if form.emergency_contact_number.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.emergency_contact_number.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- 🩸 Medical Information -->
+                    <fieldset class="border border-gray-200 rounded-md p-4">
+                        <legend class="text-lg font-semibold px-2">🩸 Medical Information</legend>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                            <div>
+                                {{ form.blood_type|as_crispy_field }}
+                                {% if form.blood_type.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.blood_type.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.allergies|as_crispy_field }}
+                                {% if form.allergies.errors %}
+                                    <p class="text-red-500 text-sm mt-1">{{ form.allergies.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- 📤 Submit and Cancel Buttons -->
+                    <div class="flex flex-col md:flex-row gap-4 justify-center mt-8">
+                        <button type="submit" class="btn btn-primary w-full md:w-auto px-6 py-2 font-semibold">
+                             Save Changes
+                        </button>
+                        <a href="{% url 'patient_view_profile' %}" class="btn btn-neutral w-full md:w-auto px-6 py-2 font-semibold">
+                             Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateOfBirthInput = document.getElementById('id_date_of_birth');
+
+        if (dateOfBirthInput && !dateOfBirthInput.value) {
+            // Create today's date
+            const today = new Date();
+
+            // Format as YYYY-MM-DD
+            const formattedDate = today.toLocaleDateString('en-CA'); // en-CA ensures YYYY-MM-DD format
+
+            // Set the value
+            dateOfBirthInput.value = formattedDate;
+        }
+    });
+</script>
+{% endblock %}
