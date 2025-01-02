@@ -40,6 +40,7 @@ urlpatterns = [
     path('patient-profile/', views.patient_view_profile, name='patient_view_profile'),
     path('patient-profile/edit/', views.patient_edit_own_profile, name='patient_edit_own_profile'),
     path('patient-profile/change-password/', views.patient_change_password, name='patient_change_password'),
+    path('api/validate_contact_number/', views.validate_contact_number, name='validate_contact_number'),
 
     path('proceed/<int:ticket_id>/', views.proceed_next_patient, name='proceed_next_patient'),
     

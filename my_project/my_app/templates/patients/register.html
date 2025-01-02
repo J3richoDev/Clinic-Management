@@ -76,10 +76,13 @@
                 <label class="font-medium">Address</label>
                 <input type="text" id="address" class="input input-bordered w-full" placeholder="Enter your address">
             </div>
-            <div class="mt-4">
-                <label class="font-medium">Contact No</label>
-                <input type="text" class="input input-bordered w-full" placeholder="Contact No">
+            <div>
+                <label for="id_contact_number" class="block text-sm font-medium text-gray-700">Contact Number</label>
+                <input type="text" id="id_contact_number" name="contact_number" class="input input-bordered w-full" placeholder="Enter your contact number" readonly>
+                <p id="contactNumberError" class="text-red-500 text-sm mt-1"></p>
             </div>
+            
+            
             
 
             <!-- Email -->
@@ -228,8 +231,71 @@
 </div>
 
 <script>
+    let isContactNumberValid = false;
+    document.getElementById('id_contact_number').addEventListener('blur', async function () {
+        const contactNumber = this.value.trim();
+        const errorElement = document.getElementById('contactNumberError');
+    
+        // Fetch additional field values
+        const firstName = document.querySelector('input[placeholder="First Name"]').value.trim();
+        const lastName = document.querySelector('input[placeholder="Surname"]').value.trim();
+        const age = document.getElementById('age').value.trim();
+        const sex = document.querySelector('select').value.trim();
+        const dateOfBirth = document.getElementById('date_of_birth').value.trim();
+    
+        if (!contactNumber) {
+            errorElement.textContent = "Contact number is required.";
+            errorElement.className = "text-red-500 text-sm mt-1";
+            isContactNumberValid = false;
+            return;
+        }
+    
+        try {
+            const response = await fetch("{% url 'validate_contact_number' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    contact_number: contactNumber,
+                    first_name: firstName,
+                    last_name: lastName,
+                    age: age,
+                    sex: sex,
+                    date_of_birth: dateOfBirth
+                })
+            });
+    
+            const data = await response.json();
+    
+            if (!response.ok) {
+                errorElement.textContent = data.error || "Validation failed.";
+                isContactNumberValid = false;
+                errorElement.className = "text-red-500 text-sm mt-1";
+            } else if (data.exists) {
+                errorElement.textContent = "A patient with this contact number already exists.";
+                isContactNumberValid = false;
+                errorElement.className = "text-red-500 text-sm mt-1";
+            } else if (data.message) {
+                errorElement.textContent = data.message;
+                isContactNumberValid = true;
+                errorElement.className = "text-green-500 text-sm mt-1";
+            } else {
+                errorElement.textContent = "";
+                isContactNumberValid = true;
+                errorElement.className = "text-green-500 text-sm mt-1";
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            errorElement.textContent = "An error occurred while validating the contact number.";
+            isContactNumberValid = false;
+            errorElement.className = "text-red-500 text-sm mt-1";
+        }
+    });
+    
 
-    async function validatePatientData(email, contact_number) {
+    async function validatePatientData(email) {
         try {
             const response = await fetch('/my_app/api/patients/validate/', {
                 method: 'POST',
@@ -237,7 +303,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ email, contact_number }),
+                body: JSON.stringify({ email }),
             });
     
             const data = await response.json();
@@ -246,9 +312,6 @@
                 if (data.errors.email) {
                     displayError(data.errors.email, 'errorMessagePage1');
                 } 
-                if (data.errors.contact_number) {
-                    displayError(data.errors.contact_number, 'errorMessagePage1');
-                }
                 return false;
             }
     
@@ -262,11 +325,12 @@
     }
     
     async function showPage2() {
+
         const formData = {
             first_name: getValue('input[placeholder="First Name"]', document.getElementById('registrationFormPage1')),
             last_name: getValue('input[placeholder="Surname"]', document.getElementById('registrationFormPage1')),
             email: getValue('input[placeholder="Enter your email"]', document.getElementById('registrationFormPage1')),
-            contact_number: getValue('input[placeholder="Contact No"]', document.getElementById('registrationFormPage1')),
+            contact_number: document.getElementById('id_contact_number').value.trim(),
             address: getValue('#address', document.getElementById('registrationFormPage1')),
             password: getValue('#password1', document.getElementById('registrationFormPage1')),
             confirm_password: getValue('#confirm_password1', document.getElementById('registrationFormPage1'))
@@ -294,9 +358,15 @@
             displayError('Password must be at least 8 characters long, include at least one number, one special character, and one letter.', 'errorMessagePage1');
             return;
         }
+
+            // ✅ Validate Contact Number
+            if (!isContactNumberValid) {
+                displayError('Please enter a valid and unique contact number before proceeding.', 'errorMessagePage1');
+                return;
+            }
     
         // ✅ Server-side Duplicate Validation
-        const isValid = await validatePatientData(formData.email, formData.contact_number);
+        const isValid = await validatePatientData(formData.email);
         if (!isValid) {
             return;
         }
@@ -382,7 +452,7 @@ async function registerPatient() {
         address: getValue('#address', page1Form),
         age: getValue('#age', page1Form),
         sex: getValue('select', page1Form),
-        contact_number: getValue('input[placeholder="Contact No"]', page1Form),
+        contact_number: document.getElementById('id_contact_number').value.trim(),
         date_of_birth: getValue('#date_of_birth', page1Form),
         campus: getValue('input[placeholder="Campus"]', page2Form),
         college: getValue('input[placeholder="College/Office"]', page2Form),
@@ -437,6 +507,38 @@ document.querySelector('#registrationFormPage2').addEventListener('submit', func
     event.preventDefault();
     registerPatient();
 });
+
+// Function to check required fields and toggle contact number readonly
+function toggleContactNumberReadonly() {
+    const firstName = document.querySelector('input[placeholder="First Name"]').value.trim();
+    const lastName = document.querySelector('input[placeholder="Surname"]').value.trim();
+    const age = document.getElementById('age').value.trim();
+    const sex = document.querySelector('select').value.trim();
+    const dateOfBirth = document.getElementById('date_of_birth').value.trim();
+    const contactNumberInput = document.getElementById('id_contact_number');
+
+    // Enable if all fields have values, otherwise disable
+    if (firstName && lastName && age && sex && dateOfBirth) {
+        contactNumberInput.removeAttribute('readonly');
+    } else {
+        contactNumberInput.setAttribute('readonly', 'readonly');
+        contactNumberInput.value = ''; // Clear contact number if disabled
+    }
+}
+
+// Event listeners for required fields
+document.querySelector('input[placeholder="First Name"]').addEventListener('input', toggleContactNumberReadonly);
+document.querySelector('input[placeholder="Surname"]').addEventListener('input', toggleContactNumberReadonly);
+document.getElementById('age').addEventListener('input', toggleContactNumberReadonly);
+document.querySelector('select').addEventListener('change', toggleContactNumberReadonly);
+document.getElementById('date_of_birth').addEventListener('change', function() {
+    calculateAge(); // Ensure age updates correctly
+    toggleContactNumberReadonly(); // Revalidate fields
+});
+
+// Initial check on page load
+document.addEventListener('DOMContentLoaded', toggleContactNumberReadonly);
+
 
 </script>
 

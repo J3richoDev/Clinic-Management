@@ -820,3 +820,71 @@ class ValidatePatientDataView(APIView):
             return Response({'errors': errors}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"message": "Data is valid."}, status=status.HTTP_200_OK)
+    
+from django.shortcuts import render
+from .forms import PatientForm
+from .models import PatientAccount
+
+def patient_registration(request):
+    if request.method == "POST":
+        form = PatientForm(request.POST)
+        if form.is_valid():
+            contact_number = form.cleaned_data.get('contact_number')
+            
+            # Check if the contact number already exists in PatientAccount
+            if PatientAccount.objects.filter(contact_number=contact_number).exists():
+                form.add_error('contact_number', 'A patient with this contact number already exists.')
+    else:
+        form = PatientForm()
+    
+    return render(request, 'patients/register.html', {'form': form})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import PatientAccount
+import json
+
+@csrf_exempt
+def validate_contact_number(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            contact_number = data.get('contact_number')
+            first_name = data.get('first_name')
+            last_name = data.get('last_name')
+            age = data.get('age')
+            sex = data.get('sex')
+            date_of_birth = data.get('date_of_birth')
+
+            if not contact_number:
+                return JsonResponse({'error': 'Contact number is required.'}, status=400)
+
+            # Find a patient with matching personal details
+            matching_patient = PatientAccount.objects.filter(
+                first_name=first_name,
+                last_name=last_name,
+                age=age,
+                sex=sex,
+                date_of_birth=date_of_birth
+            ).first()
+
+            if matching_patient:
+                if contact_number == matching_patient.contact_number:
+                    return JsonResponse({'exists': False, 'message': 'Contact number is valid.'})
+                else:
+                    if PatientAccount.objects.filter(contact_number=contact_number).exclude(id=matching_patient.id).exists():
+                        return JsonResponse({'error': 'This contact number is already associated with another patient.'}, status=400)
+                    else:
+                        # Update contact number
+                        matching_patient.contact_number = contact_number
+                        return JsonResponse({'exists': False, 'message': 'Contact number is valid and will be updated upon registration.'})
+            else:
+                if PatientAccount.objects.filter(contact_number=contact_number).exists():
+                    return JsonResponse({'error': 'This contact number is already associated with another patient.'}, status=400)
+                else:
+                    return JsonResponse({'exists': False, 'message': 'Contact number is valid.'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format.'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
