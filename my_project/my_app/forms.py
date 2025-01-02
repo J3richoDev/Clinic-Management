@@ -40,8 +40,15 @@ class ProfileForm(forms.ModelForm):
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
+
+        # Ignore validation if username is empty or not provided
+        if not username:
+            return username
+
+        # Check for uniqueness if a username is provided
         if CustomUser.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("This username is already taken. Please choose another.")
+
         return username
     
     def clean_email(self):
@@ -165,9 +172,23 @@ class PatientEditForm(forms.ModelForm):
         ('Male', 'Male'),
         ('Female', 'Female'),
     ]
+    
+    STUDENT = 'Student'
+    FACULTY = 'Faculty'
+    NON_ACADEMIC = 'Non-academic'
+
+    ROLE_CHOICES = [
+        (STUDENT, 'Student'),
+        (FACULTY, 'Faculty'),
+        (NON_ACADEMIC, 'Non-academic'),
+    ]
     sex = forms.ChoiceField(
         choices=SEX_CHOICES, 
         widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Sex'})
+    )
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control', 'placeholder': 'Select Role'})
     )
 
     class Meta:
@@ -188,9 +209,14 @@ class PatientEditForm(forms.ModelForm):
             'emergency_contact': forms.TextInput(attrs={'class': 'input input-bordered'}),
             'relation': forms.TextInput(attrs={'class': 'input input-bordered'}),
             'emergency_contact_number': forms.TextInput(attrs={'class': 'input input-bordered'}),
-            'blood_type': forms.TextInput(attrs={'class': 'input input-bordered'}),
+            'blood_type': forms.Select(choices=[
+                ('Unknown', 'Unknown'),
+                ('A+', 'A+'), ('A-', 'A-'),
+                ('B+', 'B+'), ('B-', 'B-'),
+                ('AB+', 'AB+'), ('AB-', 'AB-'),
+                ('O+', 'O+'), ('O-', 'O-')
+            ]),
             'allergies': forms.Textarea(attrs={'rows': 2, 'class': 'textarea textarea-bordered'}),
-            'role': forms.Select(attrs={'class': 'select select-bordered'}),
         }
 
     def clean_contact_number(self):

@@ -50,6 +50,14 @@
                                placeholder="Last Name"
                                class="input input-bordered w-full" required>
                     </div>
+    
+                    <!-- Username -->
+                    <div class="hidden">
+                        <input type="text" name="username" id="id_username" 
+                            value="{{ form.username.value|default:'' }}" 
+                            placeholder="Username"
+                            class="input input-bordered w-full">
+                    </div>
                     
                     <!-- Email -->
                     <div>
