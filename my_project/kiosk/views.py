@@ -132,6 +132,18 @@ def ticket_appointment_view(request):
     return render(request, 'ticket_appointment.html')
 
 
+from rest_framework.generics import RetrieveAPIView
+from .models import Ticket
+from .serializers import TicketSerializer
+
+class LatestTicketView(RetrieveAPIView):
+    serializer_class = TicketSerializer
+
+    def get_object(self):
+        # Retrieve the latest ticket by created_at
+        return Ticket.objects.order_by('-created_at').first()
+
+
 
 
 

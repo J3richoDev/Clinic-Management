@@ -1,19 +1,14 @@
 {% extends 'guest.html' %}
 {% load static %}
 
-
 {% block content %}
 
-
 <div class="flex justify-center items-center min-h-screen bg-sky-400">
-
-    <div class="container mx-auto px-4 py-6 max-w-lg ">
-
-
+    <div class="container mx-auto px-4 py-6 max-w-lg">
         <!-- ✅ Appointment Section -->
         <div class="card bg-white shadow-md rounded-md">
             <div class="card-body">
-                <h2 class="text-xl font-bold mb-4 flex justify-center items-center">📅 Book Appointment</h2>
+                <h2 class="text-xl font-bold mb-4 text-center">📅 Book Appointment</h2>
                 <form id="appointmentForm" action="" class="space-y-4">
                     {% csrf_token %}
                     <div>
@@ -62,19 +57,53 @@
                         <label for="appointment_time" class="block text-gray-700 font-medium mb-1">Select Time</label>
                         <input type="time" id="appointment_time" name="appointment_time" class="input input-bordered w-full" required>
                     </div>
-                    <div class="flex flex-col md:flex-row gap-2  ">
-                        <button type="button" onclick="window.history.back()" class="btn btn-secondary w-full md:w-1/2">
-                            Back
-                        </button>
-                        <button type="submit" class="btn btn-primary w-full md:w-1/2">
-                            📅 Book Appointment
-                        </button>
+                    <div class="flex flex-col md:flex-row gap-2">
+                        <button type="button" onclick="window.history.back()" class="btn btn-secondary w-full md:w-1/2">Back</button>
+                        <button type="submit" class="btn btn-primary w-full md:w-1/2">📅 Book Appointment</button>
                     </div>
                 </form>
             </div>
+        </div>
     </div>
 </div>
-</div>
+
+<!-- ✅ Ticket Modal -->
+<dialog id="ticket_modal" class="modal">
+    <div class="modal-box bg-white rounded-lg shadow-lg overflow-hidden max-w-md">
+        <!-- ✖️ Close Button -->
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+
+        <!-- 🎟️ Modal Header -->
+        <div class="text-center mb-4">
+            <h3 class="text-2xl font-bold text-gray-800">🎟️ Appointment Confirmed!</h3>
+            <p class="text-sm text-gray-500 mt-1">Your appointment has been successfully booked.</p>
+        </div>
+
+        <!-- 📄 Ticket Details Section -->
+        <div id="ticket_details" class="bg-gray-50 rounded-md p-4 mb-4 border space-y-3">
+            <div>
+                <span class="font-medium text-gray-600">🆔 Queue Number:</span>
+                <span id="ticket_queue_number" class="font-bold text-gray-800"></span>
+            </div>
+            <div>
+                <span class="font-medium text-gray-600">💼 Transaction Type:</span>
+                <span id="ticket_transaction_type" class="text-gray-800"></span>
+            </div>
+            <div>
+                <span class="font-medium text-gray-600">📅 Scheduled Time:</span>
+                <span id="ticket_scheduled_time" class="text-gray-800"></span>
+            </div>
+        </div>
+
+        <!-- 🎯 Action Buttons -->
+        <div class="modal-action flex justify-center gap-2">
+            <button class="btn btn-primary px-6" onclick="ticket_modal.close()">✅ Done</button>
+        </div>
+    </div>
+</dialog>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -82,10 +111,12 @@
         const certificateGroup = document.getElementById('certificate_type_group');
         const manualInputGroup = document.getElementById('manual_input_group');
         const appointmentForm = document.getElementById('appointmentForm');
-        
+        const ticketModal = document.getElementById('ticket_modal');
+    
+        // 🛠️ Handle Conditional Display Based on Appointment Type
         appointmentType.addEventListener('change', function () {
             const selectedValue = appointmentType.value;
-
+    
             if (selectedValue === 'CERTIFICATE') {
                 certificateGroup.classList.remove('hidden');
                 manualInputGroup.classList.add('hidden');
@@ -97,45 +128,56 @@
                 manualInputGroup.classList.add('hidden');
             }
         });
-
-        // ✅ Handle async form submission
+    
+        // 📝 Prepare Transaction Group Based on Appointment Type
+        function getTransactionGroup(appointmentTypeValue) {
+            switch (appointmentTypeValue) {
+                case 'DENTAL':
+                    return 'DENTIST';
+                case 'MEDICAL':
+                    return 'PHYSICIAN';
+                case 'CERTIFICATE':
+                case 'OTHER':
+                    return 'NURSE';
+                default:
+                    return 'NURSE';
+            }
+        }
+    
+        // 📅 Format Scheduled Time
+        function formatScheduledTime(date, time) {
+            return `${date}T${time}`;
+        }
+    
+        // ✅ Handle Async Form Submission
         appointmentForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-
+    
             const formData = new FormData(appointmentForm);
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            // Determine transaction_group dynamically
-            let transactionGroup = '';
+    
             const appointmentTypeValue = formData.get('appointment_type');
-
-            if (appointmentTypeValue === 'DENTAL') {
-                transactionGroup = 'DENTIST';
-            } else if (appointmentTypeValue === 'MEDICAL') {
-                transactionGroup = 'PHYSICIAN';
-            } else if (appointmentTypeValue === 'CERTIFICATE' || appointmentTypeValue === 'OTHER') {
-                transactionGroup = 'NURSE';
-            }
-
-            // Prepare the payload
+            const transactionGroup = getTransactionGroup(appointmentTypeValue);
+    
+            // Prepare Payload
             const payload = {
-                ticket_type: 'APPOINTMENT',  // ✅ Static value
+                ticket_type: 'APPOINTMENT', // Static value
                 role: formData.get('role'),
                 special_tag: formData.get('special_tag'),
                 transaction_type: appointmentTypeValue,
-                details: formData.get('manual_input'),
-                scheduled_time: `${formData.get('appointment_date')}T${formData.get('appointment_time')}`,
-                transaction_group: transactionGroup, // ✅ Dynamically set transaction group
+                details: formData.get('manual_input') || null,
+                scheduled_time: formatScheduledTime(
+                    formData.get('appointment_date'),
+                    formData.get('appointment_time')
+                ),
+                transaction_group: transactionGroup,
+                certificate_type: appointmentTypeValue === 'CERTIFICATE' 
+                    ? formData.get('certificate_type') 
+                    : null,
             };
-
-            // ✅ Nullify `certificate_type` if appointment_type is not 'CERTIFICATE'
-            if (appointmentTypeValue === 'CERTIFICATE') {
-                payload.certificate_type = formData.get('certificate_type');
-            } else {
-                payload.certificate_type = null; // Explicitly set to null
-            }
-
+    
             try {
+                // 🔗 Send Data to Backend
                 const response = await fetch('/my_app/appointments/create/', {
                     method: 'POST',
                     headers: {
@@ -144,26 +186,48 @@
                     },
                     body: JSON.stringify(payload)
                 });
-
+    
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.detail || 'Failed to book appointment');
                 }
-
-                const responseData = await response.json();
-                alert('Appointment successfully booked!');
+    
+                // 🟢 On Success, Fetch Latest Ticket
+                const latestTicketResponse = await fetch('/kiosk/tickets/latest/');
+                if (!latestTicketResponse.ok) {
+                    throw new Error('Failed to fetch latest ticket details');
+                }
+    
+                const ticketData = await latestTicketResponse.json();
+    
+                // 🎟️ Populate Modal with Ticket Details
+                document.getElementById('ticket_queue_number').textContent = ticketData.queue_number || 'N/A';
+                document.getElementById('ticket_transaction_type').textContent = ticketData.transaction_type || 'N/A';
+                document.getElementById('ticket_scheduled_time').textContent = new Date(ticketData.scheduled_time)
+                    .toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }) || 'N/A';
+    
+                // Show Modal
+                ticketModal.showModal();
+    
+                // ✅ Reset Form
                 appointmentForm.reset();
-
-                // Reset conditional fields
                 certificateGroup.classList.add('hidden');
                 manualInputGroup.classList.add('hidden');
-
+    
             } catch (error) {
                 console.error('Error:', error);
-                alert(`Failed to book appointment: ${error.message}`);
+                alert(`❌ Failed to book appointment: ${error.message}`);
             }
         });
     });
+    
 </script>
 
 

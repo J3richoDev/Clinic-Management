@@ -95,8 +95,7 @@ class CustomUser(AbstractUser):
             self.first_name = ' '.join([word.capitalize() for word in self.first_name.split()])
 
         if self.middle_name:
-            middle_initials = [word[0].upper() for word in self.middle_name.split() if word]
-            self.middle_name = '.'.join(middle_initials) + '.'
+            self.middle_name = ' '.join([word.capitalize() for word in self.middle_name.split()])
 
         if self.last_name:
             self.last_name = ' '.join([word.capitalize() for word in self.last_name.split()])
@@ -110,7 +109,7 @@ class CustomUser(AbstractUser):
                 f"{self.first_name.lower()}.{self.last_name.lower()}.{middle_initial}"
                 .replace(" ", "")
             )
-            self.email = f"{email_username}@buslu.edu.ph"
+            self.email = f"{email_username}@bulsu.edu.ph"
 
         super().save(*args, **kwargs)
 
